@@ -9,23 +9,9 @@ fn usage(program: Str) Str {
   "Usage: {program} <command> [options]\n\nCommands:\n  init                Initialize migrations directory\n  create <name>       Create a new migration pair\n  up                  Apply pending migrations\n  down                Roll back the last batch\n  status              Show migration status\n  validate            Validate migration files and DB drift\n  help                Show this help\n\nOptions:\n  --dir <path>              Migrations directory (default: migrations)\n  --database-url <value>    Database URL/path (default: DATABASE_URL env)"
 }
 
-fn require_condition(condition: Bool, message: Str) Void!Str {
-  match condition {
-    true => Result::ok(()),
-    false => Result::err(message),
-  }
-}
-
 fn command_map() [Str: Int] {
-  let cmds: [Str: Int] = [
-    "init": 0,
-    "create": 1,
-    "up": 2,
-    "down": 3,
-    "status": 4,
-    "validate": 5,
-    "help": 6,
-  ]
+  let cmds: [Str: Int] = ["init": 0, "create": 1, "up": 2, "down": 3, "status": 4, "validate": 5, "help": 6]
+
   cmds
 }
 
@@ -44,8 +30,10 @@ fn command_from_index(index: Int) types::Command {
 fn parse_command(name: Str) types::Command!Str {
   let cmds = command_map()
   let index = cmds.get(name).or(-1)
-  try require_condition(index >= 0, "Unknown command: {name}")
-  Result::ok(command_from_index(index))
+  match index >= 0 {
+    true => Result::ok(command_from_index(index)),
+    false => Result::err("Unknown command: {name}"),
+  }
 }
 
 fn next_arg(arguments: [Str], index: Int, flag: Str) Str!Str {
@@ -70,19 +58,19 @@ fn parse() types::Config!Str {
     match {
       arg == "--dir" => {
         migrations_dir = try next_arg(args.arguments, index, "--dir")
-        index = index + 2
+        index =+ 2
       },
       arg == "--database-url" => {
         database_url = maybe::some(try next_arg(args.arguments, index, "--database-url"))
-        index = index + 2
+        index =+ 2
       },
       command_name.is_empty() => {
         command_name = arg
-        index = index + 1
+        index =+ 1
       },
       command_name == "create" and create_name.is_none() => {
         create_name = maybe::some(arg)
-        index = index + 1
+        index =+ 1
       },
       _ => {
         parse_error = "Unexpected argument: {arg}\n\n{usage(args.program)}"
@@ -91,22 +79,30 @@ fn parse() types::Config!Str {
     }
   }
 
-  try require_condition(parse_error.is_empty(), parse_error)
+  match parse_error.is_empty() {
+    true => {
+      match not command_name == "create" or create_name.is_some() {
+        false => Result::err("create requires a migration name"),
+        true => {
+          let command = match command_name.is_empty() {
+            true => types::Command::help,
+            false => try parse_command(command_name),
+          }
 
-  try require_condition((not (command_name == "create")) or create_name.is_some(), "create requires a migration name")
-
-  let command = match command_name.is_empty() {
-    true => types::Command::help,
-    false => try parse_command(command_name),
+          Result::ok(
+            types::Config{
+              program: args.program,
+              command: command,
+              migrations_dir: migrations_dir,
+              database_url: database_url,
+              create_name: create_name,
+            },
+          )
+        },
+      }
+    },
+    false => Result::err(parse_error),
   }
-
-  Result::ok(types::Config{
-    program: args.program,
-    command: command,
-    migrations_dir: migrations_dir,
-    database_url: database_url,
-    create_name: create_name,
-  })
 }
 
 fn print_usage(program: Str) {
