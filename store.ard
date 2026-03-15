@@ -54,6 +54,7 @@ fn record(tx: sql::Transaction, name: Str, batch: Int) Void!Str {
   try tx.query(
     "INSERT INTO schema_migrations (name, batch) VALUES (@name, @batch)",
   ).run(["name": name, "batch": batch])
+
   Result::ok(())
 }
 
