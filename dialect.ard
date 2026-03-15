@@ -1,0 +1,29 @@
+use deebee/types
+
+fn require_condition(condition: Bool, message: Str) Void!Str {
+  match condition {
+    true => Result::ok(()),
+    false => Result::err(message),
+  }
+}
+
+fn infer(database_url: Str) types::Dialect!Str {
+  let trimmed = database_url.trim()
+
+  try require_condition((not trimmed.is_empty()), "Database URL cannot be empty")
+  try require_condition((not trimmed.contains("@tcp(")), "MySQL is not supported in v1")
+  try require_condition((not trimmed.contains("@unix(")), "MySQL is not supported in v1")
+
+  match {
+    trimmed.starts_with("postgres://") => Result::ok(types::Dialect::postgres),
+    trimmed.starts_with("postgresql://") => Result::ok(types::Dialect::postgres),
+    _ => Result::ok(types::Dialect::sqlite),
+  }
+}
+
+fn name(dialect: types::Dialect) Str {
+  match dialect {
+    types::Dialect::postgres => "postgres",
+    types::Dialect::sqlite => "sqlite",
+  }
+}

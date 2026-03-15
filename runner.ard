@@ -1,0 +1,227 @@
+use ard/io
+use ard/sql
+
+use deebee/cli
+use deebee/dialect
+use deebee/files
+use deebee/store
+use deebee/types
+
+fn has_name(values: [Str], target: Str) Bool {
+  mut found = false
+  for value in values {
+    if value == target {
+      found = true
+    }
+  }
+  found
+}
+
+fn require_database_url(config: types::Config) Str!Str {
+  let database_url = config.database_url.or("").trim()
+  match database_url.is_empty() {
+    true => Result::err("DATABASE_URL is required for this command"),
+    false => Result::ok(database_url),
+  }
+}
+
+fn open_database(config: types::Config) sql::Database!Str {
+  let database_url = try require_database_url(config)
+  let inferred = try dialect::infer(database_url)
+  io::print("Using {dialect::name(inferred)} database")
+  store::connect(database_url)
+}
+
+fn run_up(config: types::Config) Void!Str {
+  let db = try open_database(config)
+  try store::init_table(db)
+
+  let all_migrations = try files::load(config.migrations_dir)
+  let next_batch = (try store::latest_batch(db)) + 1
+
+  mut applied_count = 0
+  for migration in all_migrations {
+    let already_applied = try store::is_applied(db, migration.name)
+
+    match already_applied {
+      true => (),
+      false => {
+        let migration_sql = try files::read_sql(migration.up_path)
+        let tx = try db.begin()
+
+        try tx.exec(migration_sql) -> err {
+          let _ = tx.rollback()
+          Result::err(err)
+        }
+
+        try store::record(tx, migration.name, next_batch) -> err {
+          let _ = tx.rollback()
+          Result::err(err)
+        }
+
+        try tx.commit() -> err {
+          let _ = tx.rollback()
+          Result::err(err)
+        }
+
+        io::print("[UP] {migration.name}")
+        applied_count = applied_count + 1
+      },
+    }
+  }
+
+  match applied_count {
+    0 => io::print("No pending migrations"),
+    _ => io::print("{applied_count} migration(s) applied"),
+  }
+
+  Result::ok(())
+}
+
+fn run_down(config: types::Config) Void!Str {
+  let db = try open_database(config)
+  try store::init_table(db)
+
+  let batch_names = try store::last_batch_migrations(db)
+
+  match batch_names.size() {
+    0 => {
+      io::print("No migrations to rollback")
+      Result::ok(())
+    },
+    _ => {
+      for migration_name in batch_names {
+        let down_path = "{config.migrations_dir}/{migration_name}.down.sql"
+        let _ = try files::read_sql(down_path)
+      }
+
+      for migration_name in batch_names {
+        let down_path = "{config.migrations_dir}/{migration_name}.down.sql"
+        let migration_sql = try files::read_sql(down_path)
+        let tx = try db.begin()
+
+        try tx.exec(migration_sql) -> err {
+          let _ = tx.rollback()
+          Result::err(err)
+        }
+
+        try store::remove(tx, migration_name) -> err {
+          let _ = tx.rollback()
+          Result::err(err)
+        }
+
+        try tx.commit() -> err {
+          let _ = tx.rollback()
+          Result::err(err)
+        }
+
+        io::print("[DOWN] {migration_name}")
+      }
+
+      io::print("1 batch rolled back")
+      Result::ok(())
+    },
+  }
+}
+
+fn run_status(config: types::Config) Void!Str {
+  let db = try open_database(config)
+  try store::init_table(db)
+
+  let all_migrations = try files::load(config.migrations_dir)
+  let applied = try store::applied(db)
+
+  io::print("=== Migration Status ===")
+  for migration in all_migrations {
+    match has_name(applied, migration.name) {
+      true => io::print("[APPLIED] {migration.name}"),
+      false => io::print("[PENDING] {migration.name}"),
+    }
+  }
+
+  for name in applied {
+    mut exists_on_disk = false
+    for migration in all_migrations {
+      if migration.name == name {
+        exists_on_disk = true
+      }
+    }
+
+    match exists_on_disk {
+      true => (),
+      false => io::print("[MISSING] {name}"),
+    }
+  }
+
+  Result::ok(())
+}
+
+fn check_migration_on_disk(migrations: [types::Migration], name: Str) Bool {
+  mut found = false
+  for migration in migrations {
+    if migration.name == name {
+      found = true
+    }
+  }
+  found
+}
+
+fn find_missing_applied(migrations: [types::Migration], applied: [Str]) Str {
+  mut missing = ""
+  for name in applied {
+    if missing.is_empty() {
+      match check_migration_on_disk(migrations, name) {
+        true => (),
+        false => {
+          missing = name
+        },
+      }
+    }
+  }
+  missing
+}
+
+fn run_validate_db(config: types::Config, migrations: [types::Migration]) Void!Str {
+  let db = try open_database(config)
+  try store::init_table(db)
+  let applied = try store::applied(db)
+  let missing = find_missing_applied(migrations, applied)
+
+  match missing.is_empty() {
+    true => {
+      io::print("Database drift validation passed")
+      Result::ok(())
+    },
+    false => Result::err("Applied migration missing from filesystem: {missing}"),
+  }
+}
+
+fn run_validate(config: types::Config) Void!Str {
+  let migrations = try files::load(config.migrations_dir)
+  io::print("Migration files are valid")
+  io::print("Found {migrations.size()} migration pair(s)")
+
+  let database_url = config.database_url.or("").trim()
+  match database_url.is_empty() {
+    true => {
+      io::print("Skipped database drift validation (set DATABASE_URL or --database-url)")
+      Result::ok(())
+    },
+    false => run_validate_db(config, migrations),
+  }
+}
+
+fn run(config: types::Config) Void!Str {
+  match config.command {
+    types::Command::help => {
+      cli::print_usage(config.program)
+      Result::ok(())
+    },
+    types::Command::init => files::init(config.migrations_dir),
+    types::Command::create => files::create(config.migrations_dir, config.create_name.or("")),
+    types::Command::up => run_up(config),
+    types::Command::down => run_down(config),
+    types::Command::status => run_status(config),
+    types::Command::validate => run_validate(config),
+  }
+}

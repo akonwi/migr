@@ -1,0 +1,211 @@
+use ard/fs
+use ard/io
+
+use deebee/types
+
+fn require_condition(condition: Bool, message: Str) Void!Str {
+  match condition {
+    true => Result::ok(()),
+    false => Result::err(message),
+  }
+}
+
+fn ensure_dir_exists(path: Str) Void!Str {
+  match fs::is_dir(path) {
+    true => Result::ok(()),
+    false => Result::err("Missing migrations directory: {path}"),
+  }
+}
+
+fn parse_direction(raw: Str) types::Direction!Str {
+  let dirs: [Str: Int] = ["up": 0, "down": 1]
+  let index = dirs.get(raw).or(-1)
+  try require_condition(index >= 0, "Invalid migration direction: {raw}")
+  let dir = match index {
+    0 => types::Direction::up,
+    _ => types::Direction::down,
+  }
+  Result::ok(dir)
+}
+
+fn parse_part(filename: Str) types::MigrationPart!Str {
+  let pieces = filename.split(".")
+  try require_condition(pieces.size() == 3, "Invalid migration filename: {filename}")
+  try require_condition(pieces.at(2) == "sql", "Invalid migration filename: {filename}")
+
+  let direction = try parse_direction(pieces.at(1))
+  let base = pieces.at(0)
+  let base_parts = base.split("_")
+
+  try require_condition(base_parts.size() >= 2, "Migration filename must be <number>_<name>.<up|down>.sql: {filename}")
+
+  let number = Int::from_str(base_parts.at(0)).or(0)
+  try require_condition(number > 0, "Migration number must be a positive integer: {filename}")
+
+  Result::ok(types::MigrationPart{
+    number: number,
+    name: base,
+    direction: direction,
+    filename: filename,
+  })
+}
+
+fn is_migration_sql(filename: Str) Bool {
+  filename.contains(".sql")
+}
+
+fn has_part(parts: [types::MigrationPart], name: Str, direction: types::Direction) Bool {
+  mut found = false
+  for part in parts {
+    if part.name == name and part.direction == direction {
+      found = true
+    }
+  }
+  found
+}
+
+fn has_migration_name(migrations: [types::Migration], name: Str) Bool {
+  mut found = false
+  for migration in migrations {
+    if migration.name == name {
+      found = true
+    }
+  }
+  found
+}
+
+fn has_migration_number(migrations: [types::Migration], number: Int, except_name: Str) Bool {
+  mut found = false
+  for migration in migrations {
+    if migration.number == number and (not (migration.name == except_name)) {
+      found = true
+    }
+  }
+  found
+}
+
+fn sort_migrations(mut migrations: [types::Migration]) [types::Migration] {
+  mut left = 0
+  while left < migrations.size() {
+    mut right = left + 1
+    while right < migrations.size() {
+      if migrations.at(right).number < migrations.at(left).number {
+        migrations.swap(left, right)
+      }
+      right = right + 1
+    }
+    left = left + 1
+  }
+
+  migrations
+}
+
+fn build_migration_name(number: Int, raw_name: Str) Str {
+  let prefix = match {
+    number < 10 => "000{number}",
+    number < 100 => "00{number}",
+    number < 1000 => "0{number}",
+    _ => number.to_str(),
+  }
+  "{prefix}_{raw_name}"
+}
+
+fn load(dir: Str) [types::Migration]!Str {
+  try ensure_dir_exists(dir)
+  let entries = try fs::list_dir(dir)
+
+  mut parts: [types::MigrationPart] = []
+  for entry in entries {
+    if entry.is_file and is_migration_sql(entry.name) {
+      let parsed = try parse_part(entry.name)
+      parts.push(parsed)
+    }
+  }
+
+  mut migrations: [types::Migration] = []
+
+  for part in parts {
+    match part.direction {
+      types::Direction::up => {
+        try require_condition((not has_migration_name(migrations, part.name)), "Duplicate up migration: {part.filename}")
+        try require_condition((not has_migration_number(migrations, part.number, part.name)), "Duplicate migration number: {part.number}")
+        try require_condition(has_part(parts, part.name, types::Direction::down), "Missing down migration for {part.name}")
+
+        let _ = migrations.push(types::Migration{
+          number: part.number,
+          name: part.name,
+          up_path: "{dir}/{part.name}.up.sql",
+          down_path: "{dir}/{part.name}.down.sql",
+        })
+      },
+      types::Direction::down => (),
+    }
+  }
+
+  for part in parts {
+    match part.direction {
+      types::Direction::down => {
+        try require_condition(has_part(parts, part.name, types::Direction::up), "Missing up migration for {part.name}")
+      },
+      types::Direction::up => (),
+    }
+  }
+
+  Result::ok(sort_migrations(migrations))
+}
+
+fn next_number(dir: Str) Int!Str {
+  try ensure_dir_exists(dir)
+  let entries = try fs::list_dir(dir)
+
+  mut max_number = 0
+  for entry in entries {
+    if entry.is_file and is_migration_sql(entry.name) {
+      let part = try parse_part(entry.name)
+      if part.number > max_number {
+        max_number = part.number
+      }
+    }
+  }
+
+  Result::ok(max_number + 1)
+}
+
+fn is_valid_slug(name: Str) Bool {
+  (not name.trim().is_empty()) and (not name.contains(" ")) and (not name.contains("/")) and (not name.contains("\\")) and (not name.contains("."))
+}
+
+fn create(dir: Str, raw_name: Str) Void!Str {
+  try ensure_dir_exists(dir)
+  try require_condition(is_valid_slug(raw_name), "Migration name must be a slug without spaces, slashes, or dots")
+
+  let number = try next_number(dir)
+  let migration_name = build_migration_name(number, raw_name)
+  let up_path = "{dir}/{migration_name}.up.sql"
+  let down_path = "{dir}/{migration_name}.down.sql"
+
+  try require_condition((not fs::exists(up_path)), "Migration already exists: {migration_name}")
+  try require_condition((not fs::exists(down_path)), "Migration already exists: {migration_name}")
+
+  try fs::write(up_path, "-- Write SQL to apply migration: {migration_name}\n")
+  try fs::write(down_path, "-- Write SQL to rollback migration: {migration_name}\n")
+
+  io::print("Created migration files:")
+  io::print("- {up_path}")
+  io::print("- {down_path}")
+  Result::ok(())
+}
+
+fn init(dir: Str) Void!Str {
+  match fs::is_dir(dir) {
+    true => {
+      io::print("Migrations directory already exists: {dir}")
+      Result::ok(())
+    },
+    false => Result::err("Ard does not currently provide directory creation in stdlib. Create it manually, then rerun: mkdir {dir}"),
+  }
+}
+
+fn read_sql(path: Str) Str!Str {
+  fs::read(path)
+}

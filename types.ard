@@ -1,0 +1,41 @@
+enum Command {
+  init,
+  create,
+  up,
+  down,
+  status,
+  validate,
+  help,
+}
+
+enum Dialect {
+  postgres,
+  sqlite,
+}
+
+enum Direction {
+  up,
+  down,
+}
+
+struct Config {
+  program: Str,
+  command: Command,
+  migrations_dir: Str,
+  database_url: Str?,
+  create_name: Str?,
+}
+
+struct MigrationPart {
+  number: Int,
+  name: Str,
+  direction: Direction,
+  filename: Str,
+}
+
+struct Migration {
+  number: Int,
+  name: Str,
+  up_path: Str,
+  down_path: Str,
+}

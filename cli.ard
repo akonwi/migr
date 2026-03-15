@@ -1,0 +1,114 @@
+use ard/argv
+use ard/env
+use ard/io
+use ard/maybe
+
+use deebee/types
+
+fn usage(program: Str) Str {
+  "Usage: {program} <command> [options]\n\nCommands:\n  init                Initialize migrations directory\n  create <name>       Create a new migration pair\n  up                  Apply pending migrations\n  down                Roll back the last batch\n  status              Show migration status\n  validate            Validate migration files and DB drift\n  help                Show this help\n\nOptions:\n  --dir <path>              Migrations directory (default: migrations)\n  --database-url <value>    Database URL/path (default: DATABASE_URL env)"
+}
+
+fn require_condition(condition: Bool, message: Str) Void!Str {
+  match condition {
+    true => Result::ok(()),
+    false => Result::err(message),
+  }
+}
+
+fn command_map() [Str: Int] {
+  let cmds: [Str: Int] = [
+    "init": 0,
+    "create": 1,
+    "up": 2,
+    "down": 3,
+    "status": 4,
+    "validate": 5,
+    "help": 6,
+  ]
+  cmds
+}
+
+fn command_from_index(index: Int) types::Command {
+  match index {
+    0 => types::Command::init,
+    1 => types::Command::create,
+    2 => types::Command::up,
+    3 => types::Command::down,
+    4 => types::Command::status,
+    5 => types::Command::validate,
+    _ => types::Command::help,
+  }
+}
+
+fn parse_command(name: Str) types::Command!Str {
+  let cmds = command_map()
+  let index = cmds.get(name).or(-1)
+  try require_condition(index >= 0, "Unknown command: {name}")
+  Result::ok(command_from_index(index))
+}
+
+fn next_arg(arguments: [Str], index: Int, flag: Str) Str!Str {
+  match index + 1 < arguments.size() {
+    true => Result::ok(arguments.at(index + 1)),
+    false => Result::err("Missing value for {flag}"),
+  }
+}
+
+fn parse() types::Config!Str {
+  let args = argv::load()
+  mut command_name = ""
+  mut migrations_dir = "migrations"
+  mut database_url = env::get("DATABASE_URL")
+  mut create_name: Str? = maybe::none()
+  mut parse_error = ""
+
+  mut index = 0
+  while index < args.arguments.size() {
+    let arg = args.arguments.at(index)
+
+    match {
+      arg == "--dir" => {
+        migrations_dir = try next_arg(args.arguments, index, "--dir")
+        index = index + 2
+      },
+      arg == "--database-url" => {
+        database_url = maybe::some(try next_arg(args.arguments, index, "--database-url"))
+        index = index + 2
+      },
+      command_name.is_empty() => {
+        command_name = arg
+        index = index + 1
+      },
+      command_name == "create" and create_name.is_none() => {
+        create_name = maybe::some(arg)
+        index = index + 1
+      },
+      _ => {
+        parse_error = "Unexpected argument: {arg}\n\n{usage(args.program)}"
+        index = args.arguments.size()
+      },
+    }
+  }
+
+  try require_condition(parse_error.is_empty(), parse_error)
+
+  try require_condition((not (command_name == "create")) or create_name.is_some(), "create requires a migration name")
+
+  let command = match command_name.is_empty() {
+    true => types::Command::help,
+    false => try parse_command(command_name),
+  }
+
+  Result::ok(types::Config{
+    program: args.program,
+    command: command,
+    migrations_dir: migrations_dir,
+    database_url: database_url,
+    create_name: create_name,
+  })
+}
+
+fn print_usage(program: Str) {
+  io::print(usage(program))
+}
