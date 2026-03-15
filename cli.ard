@@ -9,11 +9,7 @@ fn usage(program: Str) Str {
   "Usage: {program} <command> [options]\n\nCommands:\n  init                Initialize migrations directory\n  create <name>       Create a new migration pair\n  up                  Apply pending migrations\n  down                Roll back the last batch\n  status              Show migration status\n  validate            Validate migration files and DB drift\n  help                Show this help\n\nOptions:\n  --dir <path>              Migrations directory (default: migrations)\n  --database-url <value>    Database URL/path (default: DATABASE_URL env)"
 }
 
-fn command_map() [Str: Int] {
-  let cmds: [Str: Int] = ["init": 0, "create": 1, "up": 2, "down": 3, "status": 4, "validate": 5, "help": 6]
-
-  cmds
-}
+let cmds = ["init": 0, "create": 1, "up": 2, "down": 3, "status": 4, "validate": 5, "help": 6]
 
 fn command_from_index(index: Int) types::Command {
   match index {
@@ -28,7 +24,6 @@ fn command_from_index(index: Int) types::Command {
 }
 
 fn parse_command(name: Str) types::Command!Str {
-  let cmds = command_map()
   let index = cmds.get(name).or(-1)
   match index >= 0 {
     true => Result::ok(command_from_index(index)),
