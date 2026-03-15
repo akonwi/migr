@@ -1,0 +1,122 @@
+use ard/testing
+
+use deebee/cli
+use deebee/types
+
+// -- parse_command tests --
+
+test fn parse_command_returns_init() Void!Str {
+  let cmd = try cli::parse_command("init")
+  match cmd {
+    types::Command::init => testing::pass(),
+    _ => testing::fail("Expected Command::init"),
+  }
+}
+
+test fn parse_command_returns_create() Void!Str {
+  let cmd = try cli::parse_command("create")
+  match cmd {
+    types::Command::create => testing::pass(),
+    _ => testing::fail("Expected Command::create"),
+  }
+}
+
+test fn parse_command_returns_up() Void!Str {
+  let cmd = try cli::parse_command("up")
+  match cmd {
+    types::Command::up => testing::pass(),
+    _ => testing::fail("Expected Command::up"),
+  }
+}
+
+test fn parse_command_returns_down() Void!Str {
+  let cmd = try cli::parse_command("down")
+  match cmd {
+    types::Command::down => testing::pass(),
+    _ => testing::fail("Expected Command::down"),
+  }
+}
+
+test fn parse_command_returns_status() Void!Str {
+  let cmd = try cli::parse_command("status")
+  match cmd {
+    types::Command::status => testing::pass(),
+    _ => testing::fail("Expected Command::status"),
+  }
+}
+
+test fn parse_command_returns_validate() Void!Str {
+  let cmd = try cli::parse_command("validate")
+  match cmd {
+    types::Command::validate => testing::pass(),
+    _ => testing::fail("Expected Command::validate"),
+  }
+}
+
+test fn parse_command_returns_help() Void!Str {
+  let cmd = try cli::parse_command("help")
+  match cmd {
+    types::Command::help => testing::pass(),
+    _ => testing::fail("Expected Command::help"),
+  }
+}
+
+test fn parse_command_rejects_unknown() Void!Str {
+  match cli::parse_command("bogus") {
+    ok(_) => testing::fail("Should have returned an error"),
+    err(msg) => try testing::assert(msg == "Unknown command: bogus", "Wrong error: {msg}"),
+  }
+  testing::pass()
+}
+
+// -- next_arg tests --
+
+test fn next_arg_returns_value_at_next_index() Void!Str {
+  let args = ["--dir", "/tmp/migrations"]
+  let val = try cli::next_arg(args, 0, "--dir")
+  try testing::assert(val == "/tmp/migrations", "Expected /tmp/migrations, got {val}")
+  testing::pass()
+}
+
+test fn next_arg_errors_when_no_value() Void!Str {
+  let args = ["--dir"]
+  match cli::next_arg(args, 0, "--dir") {
+    ok(_) => testing::fail("Should have returned an error"),
+    err(msg) => try testing::assert(msg == "Missing value for --dir", "Wrong error: {msg}"),
+  }
+  testing::pass()
+}
+
+test fn next_arg_works_at_middle_index() Void!Str {
+  let args = ["up", "--dir", "db/migrations", "--database-url", "test.db"]
+  let val = try cli::next_arg(args, 1, "--dir")
+  try testing::assert(val == "db/migrations", "Expected db/migrations, got {val}")
+  testing::pass()
+}
+
+// -- usage tests --
+
+test fn usage_contains_program_name() Void!Str {
+  let text = cli::usage("myapp")
+  try testing::assert(text.contains("myapp"), "Expected usage to contain program name")
+  testing::pass()
+}
+
+test fn usage_lists_all_commands() Void!Str {
+  let text = cli::usage("x")
+  try testing::assert(text.contains("init"), "Missing init")
+  try testing::assert(text.contains("create"), "Missing create")
+  try testing::assert(text.contains("up"), "Missing up")
+  try testing::assert(text.contains("down"), "Missing down")
+  try testing::assert(text.contains("status"), "Missing status")
+  try testing::assert(text.contains("validate"), "Missing validate")
+  try testing::assert(text.contains("help"), "Missing help")
+  testing::pass()
+}
+
+test fn usage_lists_options() Void!Str {
+  let text = cli::usage("x")
+  try testing::assert(text.contains("--dir"), "Missing --dir option")
+  try testing::assert(text.contains("--database-url"), "Missing --database-url option")
+  testing::pass()
+}
