@@ -59,7 +59,7 @@ fn parse() types::Config!Str {
 
   match parse_error.is_empty() {
     true => {
-      match not command_name == "create" or create_name.is_some() {
+      match (not (command_name == "create")) or create_name.is_some() {
         false => Result::err("create requires a migration name"),
         true => {
           let command = match command_name.is_empty() {

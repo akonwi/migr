@@ -191,7 +191,7 @@ fn next_number(dir: Str) Int!Str {
 }
 
 fn is_valid_slug(name: Str) Bool {
-  not name.trim().is_empty() and not name.contains(" ") and not name.contains("/") and not name.contains("\\") and not name.contains(".")
+  (not name.trim().is_empty()) and (not name.contains(" ")) and (not name.contains("/")) and (not name.contains("\\")) and (not name.contains("."))
 }
 
 fn create(dir: Str, raw_name: Str) Void!Str {
