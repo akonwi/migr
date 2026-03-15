@@ -172,9 +172,7 @@ fn find_missing_applied(migrations: [types::Migration], applied: [Str]) Str {
     if missing.is_empty() {
       match check_migration_on_disk(migrations, name) {
         true => (),
-        false => {
-          missing = name
-        },
+        false => { missing = name },
       }
     }
   }

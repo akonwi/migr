@@ -4,11 +4,7 @@ use deebee/cli
 use deebee/runner
 
 fn main() {
-  let config = try cli::parse() -> err {
-    io::print("Error: {err}")
-  }
+  let config = try cli::parse() -> err { io::print("Error: {err}") }
 
-  try runner::run(config) -> err {
-    io::print("Error: {err}")
-  }
+  try runner::run(config) -> err { io::print("Error: {err}") }
 }

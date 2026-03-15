@@ -10,7 +10,7 @@ fn require_condition(condition: Bool, message: Str) Void!Str {
 
 fn connect(database_url: Str) sql::Database!Str {
   let trimmed = database_url.trim()
-  try require_condition((not trimmed.is_empty()), "Database URL is required")
+  try require_condition(not trimmed.is_empty(), "Database URL is required")
   sql::open(trimmed)
 }
 
@@ -51,7 +51,9 @@ fn latest_batch(db: sql::Database) Int!Str {
 }
 
 fn record(tx: sql::Transaction, name: Str, batch: Int) Void!Str {
-  try tx.query("INSERT INTO schema_migrations (name, batch) VALUES (@name, @batch)").run(["name": name, "batch": batch])
+  try tx.query(
+    "INSERT INTO schema_migrations (name, batch) VALUES (@name, @batch)",
+  ).run(["name": name, "batch": batch])
   Result::ok(())
 }
 
