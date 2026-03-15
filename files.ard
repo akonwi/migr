@@ -225,9 +225,9 @@ fn init(dir: Str) Void!Str {
       Result::ok(())
     },
     false => {
-      Result::err(
-        "Ard does not currently provide directory creation in stdlib. Create it manually, then rerun: mkdir {dir}",
-      )
+      try fs::create_dir(dir)
+      io::print("Created migrations directory: {dir}")
+      Result::ok(())
     },
   }
 }
