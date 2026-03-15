@@ -1,3 +1,5 @@
+use ard/maybe
+
 enum Command {
   init,
   create,
@@ -6,6 +8,19 @@ enum Command {
   status,
   validate,
   help,
+}
+
+fn Command::from(name: Str) Command? {
+  match {
+    name == "init" => maybe::some(Command::init),
+    name == "create" => maybe::some(Command::create),
+    name == "up" => maybe::some(Command::up),
+    name == "down" => maybe::some(Command::down),
+    name == "status" => maybe::some(Command::status),
+    name == "validate" => maybe::some(Command::validate),
+    name == "help" => maybe::some(Command::help),
+    _ => maybe::none(),
+  }
 }
 
 enum Dialect {
