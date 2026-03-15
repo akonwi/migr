@@ -3,7 +3,7 @@ use ard/env
 use ard/io
 use ard/maybe
 
-use deebee/types
+use migr/types
 
 fn usage(program: Str) Str {
   "Usage: {program} <command> [options]\n\nCommands:\n  init                Initialize migrations directory\n  create <name>       Create a new migration pair\n  up                  Apply pending migrations\n  down                Roll back the last batch\n  status              Show migration status\n  validate            Validate migration files and DB drift\n  help                Show this help\n\nOptions:\n  --dir <path>              Migrations directory (default: migrations)\n  --database-url <value>    Database URL/path (default: DATABASE_URL env)"

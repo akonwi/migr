@@ -1,4 +1,4 @@
-# deebee
+# migr
 
 A standalone database migration CLI written in [Ard](https://ard.run). Manages versioned SQL migrations with up/down pairs, batch tracking, and drift validation.
 
@@ -13,28 +13,28 @@ Requires the [Ard compiler](https://ard.run).
 ard run main.ard <command>
 
 # Or build a binary
-ard build main.ard --out deebee
-./deebee <command>
+ard build main.ard --out migr
+./migr <command>
 ```
 
 ## Quick start
 
 ```bash
 # Initialize the migrations directory
-deebee init
+migr init
 
 # Create a new migration
-deebee create add_users
+migr create add_users
 
 # Edit the generated SQL files
 # migrations/0001_add_users.up.sql
 # migrations/0001_add_users.down.sql
 
 # Apply all pending migrations
-DATABASE_URL=postgres://localhost/mydb deebee up
+DATABASE_URL=postgres://localhost/mydb migr up
 
 # Check status
-DATABASE_URL=postgres://localhost/mydb deebee status
+DATABASE_URL=postgres://localhost/mydb migr status
 ```
 
 ## Commands
@@ -93,7 +93,7 @@ migrations/
 ## Project structure
 
 ```
-ard.toml        # Package config (name = "deebee")
+ard.toml        # Package config (name = "migr")
 main.ard        # CLI entrypoint
 cli.ard         # Argument parsing and usage text
 types.ard       # Enums (Command, Dialect, Direction) and structs (Config, Migration)

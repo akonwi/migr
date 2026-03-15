@@ -1,7 +1,7 @@
 use ard/fs
 use ard/io
 
-use deebee/types
+use migr/types
 
 fn require_condition(condition: Bool, message: Str) Void!Str {
   match condition {

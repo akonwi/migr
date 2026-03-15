@@ -1,7 +1,7 @@
 use ard/io
 
-use deebee/cli
-use deebee/runner
+use migr/cli
+use migr/runner
 
 fn main() {
   let config = try cli::parse() -> err { io::print("Error: {err}") }
