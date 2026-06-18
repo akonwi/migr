@@ -28,7 +28,7 @@ fn require_database_url(config: types::Config) Str!Str {
 fn open_database(config: types::Config) sql::Database!Str {
   let database_url = try require_database_url(config)
   let inferred = try dialect::infer(database_url)
-  io::print("Using {dialect::name(inferred)} database")
+  io::print("Using {inferred.name()} database")
   store::connect(database_url)
 }
 

@@ -28,6 +28,15 @@ enum Dialect {
   sqlite,
 }
 
+impl Dialect {
+  fn name() Str {
+    match self {
+      Dialect::postgres => "postgres",
+      Dialect::sqlite => "sqlite",
+    }
+  }
+}
+
 enum Direction {
   up,
   down,

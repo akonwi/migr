@@ -14,10 +14,3 @@ fn infer(database_url: Str) types::Dialect!Str {
     _ => Result::ok(types::Dialect::sqlite),
   }
 }
-
-fn name(dialect: types::Dialect) Str {
-  match dialect {
-    types::Dialect::postgres => "postgres",
-    types::Dialect::sqlite => "sqlite",
-  }
-}

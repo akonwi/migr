@@ -1,17 +1,11 @@
 use ard/decode
 use ard/sql
 
-fn require_condition(condition: Bool, message: Str) Void!Str {
-  match condition {
-    true => Result::ok(()),
-    false => Result::err(message),
-  }
-}
-
 fn connect(database_url: Str) sql::Database!Str {
-  let trimmed = database_url.trim()
-  try require_condition(not trimmed.is_empty(), "Database URL is required")
-  sql::open(trimmed)
+  match database_url.is_empty() {
+    true => Result::err("Database URL is required"),
+    false => sql::open(database_url),
+  }
 }
 
 fn init_table(db: sql::Database) Void!Str {
