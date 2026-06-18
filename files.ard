@@ -1,7 +1,9 @@
 use ard/fs
 use ard/io
+use ard/testing
 
 use migr/types
+use go:strings
 
 fn require_condition(condition: Bool, message: Str) Void!Str {
   match condition {
@@ -20,7 +22,7 @@ fn ensure_dir_exists(path: Str) Void!Str {
 fn parse_direction(raw: Str) types::Direction!Str {
   let dirs: [Str: Int] = ["up": 0, "down": 1]
   let index = dirs.get(raw).or(-1)
-  try require_condition(index >= 0, "Invalid migration direction: {raw}")
+  try testing::assert(index >= 0, "Invalid migration direction: {raw}")
   let dir = match index {
     0 => types::Direction::up,
     _ => types::Direction::down,
@@ -29,15 +31,16 @@ fn parse_direction(raw: Str) types::Direction!Str {
 }
 
 fn parse_part(filename: Str) types::MigrationPart!Str {
-  let pieces = filename.split(".")
-  try require_condition(pieces.size() == 3, "Invalid migration filename: {filename}")
-  try require_condition(pieces.at(2) == "sql", "Invalid migration filename: {filename}")
+  let pieces = strings::Split(filename, ".")
+
+  try testing::assert(pieces.size() == 3, "Invalid migration filename: {filename}")
+  try testing::assert(pieces.at(2) == "sql", "Invalid migration filename: {filename}")
 
   let direction = try parse_direction(pieces.at(1))
   let base = pieces.at(0)
-  let base_parts = base.split("_")
+  let base_parts = strings::Split(base, "_")
 
-  try require_condition(
+  try testing::assert(
     base_parts.size() >= 2,
     "Migration filename must be <number>_<name>.<up|down>.sql: {filename}",
   )
