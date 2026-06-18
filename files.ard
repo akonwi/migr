@@ -5,13 +5,6 @@ use ard/testing
 use migr/types
 use go:strings
 
-fn require_condition(condition: Bool, message: Str) Void!Str {
-  match condition {
-    true => Result::ok(()),
-    false => Result::err(message),
-  }
-}
-
 fn ensure_dir_exists(path: Str) Void!Str {
   match fs::is_dir(path) {
     true => Result::ok(()),
@@ -46,7 +39,7 @@ fn parse_part(filename: Str) types::MigrationPart!Str {
   )
 
   let number = Int::from_str(base_parts.at(0)).or(0)
-  try require_condition(number > 0, "Migration number must be a positive integer: {filename}")
+  try testing::assert(number > 0, "Migration number must be a positive integer: {filename}")
 
   Result::ok(
     types::MigrationPart{
@@ -135,15 +128,15 @@ fn load(dir: Str) [types::Migration]!Str {
   for part in parts {
     match part.direction {
       types::Direction::up => {
-        try require_condition(
+        try testing::assert(
           not has_migration_name(migrations, part.name),
           "Duplicate up migration: {part.filename}",
         )
-        try require_condition(
+        try testing::assert(
           not has_migration_number(migrations, part.number, part.name),
           "Duplicate migration number: {part.number}",
         )
-        try require_condition(
+        try testing::assert(
           has_part(parts, part.name, types::Direction::down),
           "Missing down migration for {part.name}",
         )
@@ -164,7 +157,7 @@ fn load(dir: Str) [types::Migration]!Str {
   for part in parts {
     match part.direction {
       types::Direction::down => {
-        try require_condition(
+        try testing::assert(
           has_part(parts, part.name, types::Direction::up),
           "Missing up migration for {part.name}",
         )
@@ -199,7 +192,7 @@ fn is_valid_slug(name: Str) Bool {
 
 fn create(dir: Str, raw_name: Str) Void!Str {
   try ensure_dir_exists(dir)
-  try require_condition(
+  try testing::assert(
     is_valid_slug(raw_name),
     "Migration name must be a slug without spaces, slashes, or dots",
   )
@@ -209,8 +202,8 @@ fn create(dir: Str, raw_name: Str) Void!Str {
   let up_path = "{dir}/{migration_name}.up.sql"
   let down_path = "{dir}/{migration_name}.down.sql"
 
-  try require_condition(not fs::exists(up_path), "Migration already exists: {migration_name}")
-  try require_condition(not fs::exists(down_path), "Migration already exists: {migration_name}")
+  try testing::assert(not fs::exists(up_path), "Migration already exists: {migration_name}")
+  try testing::assert(not fs::exists(down_path), "Migration already exists: {migration_name}")
 
   try fs::write(up_path, "-- Write SQL to apply migration: {migration_name}\n")
   try fs::write(down_path, "-- Write SQL to rollback migration: {migration_name}\n")
