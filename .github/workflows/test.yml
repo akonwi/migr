@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout migr
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "1.26"
           cache-dependency-path: go.sum
@@ -35,7 +35,7 @@ jobs:
 
       - name: Cache Ard compiler
         id: cache-ard
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /usr/local/bin/ard
           key: ard-compiler-${{ runner.os }}-${{ steps.ard-head.outputs.sha }}
