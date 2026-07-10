@@ -1,4 +1,4 @@
-use ard/io
+use go:fmt
 use ard/sql
 
 use migr/cli
@@ -28,7 +28,7 @@ fn require_database_url(config: types::Config) Str!Str {
 fn open_database(config: types::Config) sql::Database!Str {
   let database_url = try require_database_url(config)
   let inferred = try dialect::infer(database_url)
-  io::print("Using {inferred.name()} database")
+  fmt::Println("Using {inferred.name()} database")
   store::connect(database_url)
 }
 
@@ -64,15 +64,15 @@ fn run_up(config: types::Config) Void!Str {
           Result::err(err)
         }
 
-        io::print("[UP] {migration.name}")
+        fmt::Println("[UP] {migration.name}")
         applied_count = applied_count + 1
       },
     }
   }
 
   match applied_count {
-    0 => io::print("No pending migrations"),
-    _ => io::print("{applied_count} migration(s) applied"),
+    0 => fmt::Println("No pending migrations"),
+    _ => fmt::Println("{applied_count} migration(s) applied"),
   }
 
   Result::ok(())
@@ -86,7 +86,7 @@ fn run_down(config: types::Config) Void!Str {
 
   match batch_names.size() {
     0 => {
-      io::print("No migrations to rollback")
+      fmt::Println("No migrations to rollback")
       Result::ok(())
     },
     _ => {
@@ -115,10 +115,10 @@ fn run_down(config: types::Config) Void!Str {
           Result::err(err)
         }
 
-        io::print("[DOWN] {migration_name}")
+        fmt::Println("[DOWN] {migration_name}")
       }
 
-      io::print("1 batch rolled back")
+      fmt::Println("1 batch rolled back")
       Result::ok(())
     },
   }
@@ -131,11 +131,11 @@ fn run_status(config: types::Config) Void!Str {
   let all_migrations = try files::load(config.migrations_dir)
   let applied = try store::applied(db)
 
-  io::print("=== Migration Status ===")
+  fmt::Println("=== Migration Status ===")
   for migration in all_migrations {
     match has_name(applied, migration.name) {
-      true => io::print("[APPLIED] {migration.name}"),
-      false => io::print("[PENDING] {migration.name}"),
+      true => fmt::Println("[APPLIED] {migration.name}"),
+      false => fmt::Println("[PENDING] {migration.name}"),
     }
   }
 
@@ -149,7 +149,7 @@ fn run_status(config: types::Config) Void!Str {
 
     match exists_on_disk {
       true => (),
-      false => io::print("[MISSING] {name}"),
+      false => fmt::Println("[MISSING] {name}"),
     }
   }
 
@@ -187,7 +187,7 @@ fn run_validate_db(config: types::Config, migrations: [types::Migration]) Void!S
 
   match missing.is_empty() {
     true => {
-      io::print("Database drift validation passed")
+      fmt::Println("Database drift validation passed")
       Result::ok(())
     },
     false => Result::err("Applied migration missing from filesystem: {missing}"),
@@ -196,13 +196,13 @@ fn run_validate_db(config: types::Config, migrations: [types::Migration]) Void!S
 
 fn run_validate(config: types::Config) Void!Str {
   let migrations = try files::load(config.migrations_dir)
-  io::print("Migration files are valid")
-  io::print("Found {migrations.size()} migration pair(s)")
+  fmt::Println("Migration files are valid")
+  fmt::Println("Found {migrations.size()} migration pair(s)")
 
   let database_url = config.database_url.or("").trim()
   match database_url.is_empty() {
     true => {
-      io::print("Skipped database drift validation (set DATABASE_URL or --database-url)")
+      fmt::Println("Skipped database drift validation (set DATABASE_URL or --database-url)")
       Result::ok(())
     },
     false => run_validate_db(config, migrations),

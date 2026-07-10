@@ -1,12 +1,36 @@
-use ard/fs
-use ard/io
+use go:fmt
+use ard/string
 use ard/testing
 
 use migr/types
+use go:os
 use go:strings
 
+fn is_dir(path: Str) Bool {
+  let info = try os::Stat(path) -> _ { false }
+  info.IsDir()
+}
+
+fn exists(path: Str) Bool {
+  try os::Stat(path) -> _ { false }
+  true
+}
+
+fn read_file(path: Str) Str!Str {
+  let bytes = try os::ReadFile(path)
+  string::from_bytes(bytes)
+}
+
+fn write_file(path: Str, content: Str) Void!Str {
+  os::WriteFile(path, content.bytes(), 420)
+}
+
+fn make_dir(path: Str) Void!Str {
+  os::MkdirAll(path, 493)
+}
+
 fn ensure_dir_exists(path: Str) Void!Str {
-  match fs::is_dir(path) {
+  match is_dir(path) {
     true => Result::ok(()),
     false => Result::err("Missing migrations directory: {path}"),
   }
@@ -113,12 +137,12 @@ fn build_migration_name(number: Int, raw_name: Str) Str {
 
 fn load(dir: Str) [types::Migration]!Str {
   try ensure_dir_exists(dir)
-  let entries = try fs::list_dir(dir)
+  let entries = try os::ReadDir(dir)
 
   mut parts: [types::MigrationPart] = []
   for entry in entries {
-    if entry.is_file and is_migration_sql(entry.name) {
-      let parsed = try parse_part(entry.name)
+    if not entry.IsDir() and is_migration_sql(entry.Name()) {
+      let parsed = try parse_part(entry.Name())
       parts.push(parsed)
     }
   }
@@ -171,12 +195,12 @@ fn load(dir: Str) [types::Migration]!Str {
 
 fn next_number(dir: Str) Int!Str {
   try ensure_dir_exists(dir)
-  let entries = try fs::list_dir(dir)
+  let entries = try os::ReadDir(dir)
 
   mut max_number = 0
   for entry in entries {
-    if entry.is_file and is_migration_sql(entry.name) {
-      let part = try parse_part(entry.name)
+    if not entry.IsDir() and is_migration_sql(entry.Name()) {
+      let part = try parse_part(entry.Name())
       if part.number > max_number {
         max_number = part.number
       }
@@ -202,32 +226,32 @@ fn create(dir: Str, raw_name: Str) Void!Str {
   let up_path = "{dir}/{migration_name}.up.sql"
   let down_path = "{dir}/{migration_name}.down.sql"
 
-  try testing::assert(not fs::exists(up_path), "Migration already exists: {migration_name}")
-  try testing::assert(not fs::exists(down_path), "Migration already exists: {migration_name}")
+  try testing::assert(not exists(up_path), "Migration already exists: {migration_name}")
+  try testing::assert(not exists(down_path), "Migration already exists: {migration_name}")
 
-  try fs::write(up_path, "-- Write SQL to apply migration: {migration_name}\n")
-  try fs::write(down_path, "-- Write SQL to rollback migration: {migration_name}\n")
+  try write_file(up_path, "-- Write SQL to apply migration: {migration_name}\n")
+  try write_file(down_path, "-- Write SQL to rollback migration: {migration_name}\n")
 
-  io::print("Created migration files:")
-  io::print("- {up_path}")
-  io::print("- {down_path}")
+  fmt::Println("Created migration files:")
+  fmt::Println("- {up_path}")
+  fmt::Println("- {down_path}")
   Result::ok(())
 }
 
 fn init(dir: Str) Void!Str {
-  match fs::is_dir(dir) {
+  match is_dir(dir) {
     true => {
-      io::print("Migrations directory already exists: {dir}")
+      fmt::Println("Migrations directory already exists: {dir}")
       Result::ok(())
     },
     false => {
-      try fs::create_dir(dir)
-      io::print("Created migrations directory: {dir}")
+      try make_dir(dir)
+      fmt::Println("Created migrations directory: {dir}")
       Result::ok(())
     },
   }
 }
 
 fn read_sql(path: Str) Str!Str {
-  fs::read(path)
+  read_file(path)
 }

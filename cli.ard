@@ -1,9 +1,9 @@
 use ard/argv
-use ard/env
-use ard/io
+use go:fmt
 use ard/maybe
 
 use migr/types
+use go:os
 
 fn usage(program: Str) Str {
   "Usage: {program} <command> [options]\n\nCommands:\n  init                Initialize migrations directory\n  create <name>       Create a new migration pair\n  up                  Apply pending migrations\n  down                Roll back the last batch\n  status              Show migration status\n  validate            Validate migration files and DB drift\n  help                Show this help\n\nOptions:\n  --dir <path>              Migrations directory (default: migrations)\n  --database-url <value>    Database URL/path (default: DATABASE_URL env)"
@@ -25,7 +25,7 @@ fn parse() types::Config!Str {
   let args = argv::load()
   mut command_name = ""
   mut migrations_dir = "migrations"
-  mut database_url = env::get("DATABASE_URL")
+  mut database_url = os::LookupEnv("DATABASE_URL")
   mut create_name: Str? = maybe::none()
   mut parse_error = ""
 
@@ -59,7 +59,7 @@ fn parse() types::Config!Str {
 
   match parse_error.is_empty() {
     true => {
-      match not command_name == "create" or create_name.is_some() {
+      match command_name != "create" or create_name.is_some() {
         false => Result::err("create requires a migration name"),
         true => {
           let command = match command_name.is_empty() {
@@ -84,5 +84,5 @@ fn parse() types::Config!Str {
 }
 
 fn print_usage(program: Str) {
-  io::print(usage(program))
+  fmt::Println(usage(program))
 }
