@@ -73,17 +73,24 @@ fn string(data: Any) Str!Error {
   }
 }
 
-// JSON numbers arrive as Float64; accept only integral values.
+// Numbers arrive as Float64 from JSON and as native Int from database/sql
+// row scans (see ffi/db.go, which normalizes int64 -> int on the Go side).
+// Accept either shape and reject non-integral Float64s.
 fn int(data: Any) Int!Error {
-  match unsafe::cast<Float64>(data) {
-    value => {
-      let truncated = value.to_int()
-      match truncated.to_f64() == value {
-        true => Result::ok(truncated),
-        false => Result::err(fail("an integer")),
+  match unsafe::cast<Int>(data) {
+    n => Result::ok(n),
+    _ => {
+      match unsafe::cast<Float64>(data) {
+        value => {
+          let truncated = value.to_int()
+          match truncated.to_f64() == value {
+            true => Result::ok(truncated),
+            false => Result::err(fail("an integer")),
+          }
+        },
+        _ => Result::err(fail("a number")),
       }
     },
-    _ => Result::err(fail("a number")),
   }
 }
 

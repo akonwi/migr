@@ -1,5 +1,5 @@
 use migr/decode
-use ard/sql
+use migr/sql
 
 fn connect(database_url: Str) sql::Database!Str {
   match database_url.is_empty() {
@@ -22,8 +22,9 @@ fn is_applied(db: sql::Database, name: Str) Bool!Str {
   match rows.size() {
     0 => Result::ok(false),
     _ => {
-      let count = try decode::run(rows.at(0), decode::field("count", decode::int)) -> errs {
-        Result::err(errs.at(0).to_str())
+      let row = rows.at(0).expect("size checked")
+      let count = try decode::run(row, decode::field("count", decode::int)) -> err {
+        Result::err(err.to_str())
       }
       Result::ok(count > 0)
     },
@@ -36,8 +37,9 @@ fn latest_batch(db: sql::Database) Int!Str {
   match rows.size() {
     0 => Result::ok(0),
     _ => {
-      let max_batch = try decode::run(rows.at(0), decode::field("max_batch", decode::int)) -> errs {
-        Result::err(errs.at(0).to_str())
+      let row = rows.at(0).expect("size checked")
+      let max_batch = try decode::run(row, decode::field("max_batch", decode::int)) -> err {
+        Result::err(err.to_str())
       }
       Result::ok(max_batch)
     },
@@ -62,8 +64,8 @@ fn applied(db: sql::Database) [Str]!Str {
 
   mut names: [Str] = []
   for row in rows {
-    let name = try decode::run(row, decode::field("name", decode::string)) -> errs {
-      Result::err(errs.at(0).to_str())
+    let name = try decode::run(row, decode::field("name", decode::string)) -> err {
+      Result::err(err.to_str())
     }
     names.push(name)
   }
@@ -78,8 +80,8 @@ fn last_batch_migrations(db: sql::Database) [Str]!Str {
 
   mut names: [Str] = []
   for row in rows {
-    let name = try decode::run(row, decode::field("name", decode::string)) -> errs {
-      Result::err(errs.at(0).to_str())
+    let name = try decode::run(row, decode::field("name", decode::string)) -> err {
+      Result::err(err.to_str())
     }
     names.push(name)
   }
