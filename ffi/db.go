@@ -11,6 +11,7 @@ package ffi
 
 import (
 	"database/sql"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -132,6 +133,12 @@ func scanRows(rows *sql.Rows, err error) ([]any, error) {
 // side sees as its native scalar types. Without this, integer columns come
 // through as int64 (Ard: Int64, a sized type) rather than the default Int,
 // forcing every decoder to unsafe::cast<Int64> instead of the natural Int.
+//
+// time.Time is formatted as RFC3339Nano so that TIMESTAMP / TIMESTAMPTZ /
+// DATETIME columns (Postgres, MySQL) arrive as Ard Str the same way SQLite
+// dates already do. Callers write times back as RFC3339 strings, which
+// database/sql converts on bind, so writes are symmetric without any FFI
+// help. nil is preserved so that decode::nullable can detect SQL NULLs.
 func normalize(v any) any {
 	switch x := v.(type) {
 	case []byte:
@@ -142,6 +149,8 @@ func normalize(v any) any {
 		return int(x)
 	case float32:
 		return float64(x)
+	case time.Time:
+		return x.Format(time.RFC3339Nano)
 	default:
 		return v
 	}

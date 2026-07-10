@@ -59,3 +59,6 @@ jobs:
 
       - name: Run Ard tests
         run: ard test
+
+      - name: Run Go tests
+        run: go test ./...
