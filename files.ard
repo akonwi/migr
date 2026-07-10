@@ -1,5 +1,5 @@
 use go:fmt
-use ard/string
+use go:strconv
 use ard/testing
 
 use migr/types
@@ -18,11 +18,12 @@ fn exists(path: Str) Bool {
 
 fn read_file(path: Str) Str!Str {
   let bytes = try os::ReadFile(path)
-  string::from_bytes(bytes)
+  Result::ok(Str::from(bytes))
 }
 
 fn write_file(path: Str, content: Str) Void!Str {
-  os::WriteFile(path, content.bytes(), 420)
+  mut bytes = content.bytes()
+  os::WriteFile(path, bytes, 420)
 }
 
 fn make_dir(path: Str) Void!Str {
@@ -51,10 +52,10 @@ fn parse_part(filename: Str) types::MigrationPart!Str {
   let pieces = strings::Split(filename, ".")
 
   try testing::assert(pieces.size() == 3, "Invalid migration filename: {filename}")
-  try testing::assert(pieces.at(2) == "sql", "Invalid migration filename: {filename}")
+  try testing::assert(pieces.at(2).expect("bounds checked") == "sql", "Invalid migration filename: {filename}")
 
-  let direction = try parse_direction(pieces.at(1))
-  let base = pieces.at(0)
+  let direction = try parse_direction(pieces.at(1).expect("bounds checked"))
+  let base = pieces.at(0).expect("bounds checked")
   let base_parts = strings::Split(base, "_")
 
   try testing::assert(
@@ -62,7 +63,10 @@ fn parse_part(filename: Str) types::MigrationPart!Str {
     "Migration filename must be <number>_<name>.<up|down>.sql: {filename}",
   )
 
-  let number = Int::from_str(base_parts.at(0)).or(0)
+  let number = match strconv::Atoi(base_parts.at(0).expect("bounds checked")) {
+    ok(n) => n,
+    err(_) => 0,
+  }
   try testing::assert(number > 0, "Migration number must be a positive integer: {filename}")
 
   Result::ok(
@@ -109,12 +113,14 @@ fn has_migration_number(migrations: [types::Migration], number: Int, except_name
   found
 }
 
-fn sort_migrations(mut migrations: [types::Migration]) [types::Migration] {
+fn sort_migrations(migrations: mut [types::Migration]) [types::Migration] {
   mut left = 0
   while left < migrations.size() {
     mut right = left + 1
     while right < migrations.size() {
-      if migrations.at(right).number < migrations.at(left).number {
+      let right_m = migrations.at(right).expect("bounds checked")
+      let left_m = migrations.at(left).expect("bounds checked")
+      if right_m.number < left_m.number {
         migrations.swap(left, right)
       }
       right = right + 1
