@@ -1,4 +1,4 @@
-use ard/decode
+use migr/decode
 use ard/sql
 
 fn connect(database_url: Str) sql::Database!Str {
