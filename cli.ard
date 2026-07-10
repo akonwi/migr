@@ -1,5 +1,4 @@
 use go:fmt
-use ard/maybe
 
 use migr/types
 use go:os
@@ -15,7 +14,7 @@ fn parse_command(name: Str) types::Command!Str {
 
 fn next_arg(arguments: [Str], index: Int, flag: Str) Str!Str {
   match index + 1 < arguments.size() {
-    true => Result::ok(arguments.at(index + 1)),
+    true => Result::ok(arguments.at(index + 1).expect("bounds checked")),
     false => Result::err("Missing value for {flag}"),
   }
 }
@@ -34,12 +33,12 @@ fn parse() types::Config!Str {
   mut command_name = ""
   mut migrations_dir = "migrations"
   mut database_url = os::LookupEnv("DATABASE_URL")
-  mut create_name: Str? = maybe::none()
+  mut create_name: Str? = Maybe::new()
   mut parse_error = ""
 
   mut index = 0
   while index < arguments.size() {
-    let arg = arguments.at(index)
+    let arg = arguments.at(index).expect("bounds checked")
 
     match {
       arg == "--dir" => {
@@ -47,7 +46,7 @@ fn parse() types::Config!Str {
         index =+ 2
       },
       arg == "--database-url" => {
-        database_url = maybe::some(try next_arg(arguments, index, "--database-url"))
+        database_url = Maybe::new(try next_arg(arguments, index, "--database-url"))
         index =+ 2
       },
       command_name.is_empty() => {
@@ -55,7 +54,7 @@ fn parse() types::Config!Str {
         index =+ 1
       },
       command_name == "create" and create_name.is_none() => {
-        create_name = maybe::some(arg)
+        create_name = Maybe::new(arg)
         index =+ 1
       },
       _ => {
