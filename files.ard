@@ -147,7 +147,7 @@ fn load(dir: Str) [types::Migration]!Str {
 
   mut parts: [types::MigrationPart] = []
   for entry in entries {
-    if not entry.IsDir() and is_migration_sql(entry.Name()) {
+    if (not entry.IsDir()) and is_migration_sql(entry.Name()) {
       let parsed = try parse_part(entry.Name())
       parts.push(parsed)
     }
@@ -205,7 +205,7 @@ fn next_number(dir: Str) Int!Str {
 
   mut max_number = 0
   for entry in entries {
-    if not entry.IsDir() and is_migration_sql(entry.Name()) {
+    if (not entry.IsDir()) and is_migration_sql(entry.Name()) {
       let part = try parse_part(entry.Name())
       if part.number > max_number {
         max_number = part.number

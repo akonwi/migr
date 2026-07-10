@@ -1,0 +1,209 @@
+use ard/testing
+
+use go:os
+
+use migr/files
+use migr/types
+
+// Discovery tests operate on real files inside per-test temp directories.
+// Each test creates its dir with os::MkdirTemp, writes migration file
+// pairs, calls files::load, and asserts on the returned migrations.
+
+// ─── temp-dir helpers ────────────────────────────────────────────────────
+
+fn make_temp_dir() Str!Str {
+  os::MkdirTemp("", "migr-test-*")
+}
+
+fn cleanup(dir: Str) {
+  match os::RemoveAll(dir) {
+    ok => (),
+    err(_) => (),
+  }
+}
+
+fn write_pair(dir: Str, name: Str, up: Str, down: Str) Void!Str {
+  mut up_bytes = up.bytes()
+  try os::WriteFile("{dir}/{name}.up.sql", up_bytes, 420)
+  mut down_bytes = down.bytes()
+  os::WriteFile("{dir}/{name}.down.sql", down_bytes, 420)
+}
+
+fn write_file(path: Str, content: Str) Void!Str {
+  mut bytes = content.bytes()
+  os::WriteFile(path, bytes, 420)
+}
+
+// ─── happy-path discovery ────────────────────────────────────────────────
+
+test fn load_empty_directory_returns_no_migrations() Void!Str {
+  let dir = try make_temp_dir()
+  let migrations = try files::load(dir)
+  try testing::assert(migrations.size() == 0, "empty dir yields no migrations")
+  cleanup(dir)
+  testing::pass()
+}
+
+test fn load_single_pair_returns_one_migration_with_correct_paths() Void!Str {
+  let dir = try make_temp_dir()
+  try write_pair(dir, "0001_init", "CREATE TABLE t (id INT);", "DROP TABLE t;")
+
+  let migrations = try files::load(dir)
+  try testing::assert(migrations.size() == 1, "one migration discovered")
+
+  let m = migrations.at(0).expect("bounds")
+  try testing::assert(m.number == 1, "number parsed from filename")
+  try testing::assert(m.name == "0001_init", "name is the pre-extension basename")
+  try testing::assert(m.up_path == "{dir}/0001_init.up.sql", "up_path assembled")
+  try testing::assert(m.down_path == "{dir}/0001_init.down.sql", "down_path assembled")
+
+  cleanup(dir)
+  testing::pass()
+}
+
+test fn load_sorts_multiple_migrations_by_number_ascending() Void!Str {
+  let dir = try make_temp_dir()
+  // Deliberately create out of order to prove sorting.
+  try write_pair(dir, "0003_third", "-- up3", "-- down3")
+  try write_pair(dir, "0001_first", "-- up1", "-- down1")
+  try write_pair(dir, "0002_second", "-- up2", "-- down2")
+
+  let migrations = try files::load(dir)
+  try testing::assert(migrations.size() == 3, "three migrations")
+  try testing::assert(migrations.at(0).expect("bounds").number == 1, "first is number 1")
+  try testing::assert(migrations.at(1).expect("bounds").number == 2, "second is number 2")
+  try testing::assert(migrations.at(2).expect("bounds").number == 3, "third is number 3")
+
+  cleanup(dir)
+  testing::pass()
+}
+
+test fn load_ignores_non_sql_files() Void!Str {
+  let dir = try make_temp_dir()
+  try write_pair(dir, "0001_init", "-- up", "-- down")
+  try write_file("{dir}/README.md", "notes")
+  try write_file("{dir}/.gitkeep", "")
+
+  let migrations = try files::load(dir)
+  try testing::assert(migrations.size() == 1, "non-sql files ignored")
+
+  cleanup(dir)
+  testing::pass()
+}
+
+// ─── validation failures ─────────────────────────────────────────────────
+
+test fn load_errors_on_missing_directory() Void!Str {
+  match files::load("/definitely/does/not/exist/migr-test") {
+    ok(_) => testing::fail("expected error for missing directory"),
+    err(_) => testing::pass(),
+  }
+}
+
+test fn load_errors_when_up_has_no_matching_down() Void!Str {
+  let dir = try make_temp_dir()
+  try write_file("{dir}/0001_init.up.sql", "-- up only")
+
+  match files::load(dir) {
+    ok(_) => {
+      cleanup(dir)
+      testing::fail("expected error for missing down migration")
+    },
+    err(_) => {
+      cleanup(dir)
+      testing::pass()
+    },
+  }
+}
+
+test fn load_errors_when_down_has_no_matching_up() Void!Str {
+  let dir = try make_temp_dir()
+  try write_file("{dir}/0001_init.down.sql", "-- down only")
+
+  match files::load(dir) {
+    ok(_) => {
+      cleanup(dir)
+      testing::fail("expected error for missing up migration")
+    },
+    err(_) => {
+      cleanup(dir)
+      testing::pass()
+    },
+  }
+}
+
+test fn load_errors_on_duplicate_migration_number() Void!Str {
+  let dir = try make_temp_dir()
+  try write_pair(dir, "0001_first", "-- up", "-- down")
+  try write_pair(dir, "0001_second", "-- up", "-- down")
+
+  match files::load(dir) {
+    ok(_) => {
+      cleanup(dir)
+      testing::fail("expected error for duplicate migration number")
+    },
+    err(_) => {
+      cleanup(dir)
+      testing::pass()
+    },
+  }
+}
+
+test fn load_errors_on_malformed_filename_without_number_prefix() Void!Str {
+  let dir = try make_temp_dir()
+  // No leading number: parse_part requires a positive integer prefix.
+  try write_pair(dir, "init", "-- up", "-- down")
+
+  match files::load(dir) {
+    ok(_) => {
+      cleanup(dir)
+      testing::fail("expected error for missing number prefix")
+    },
+    err(_) => {
+      cleanup(dir)
+      testing::pass()
+    },
+  }
+}
+
+// ─── parse_part directly ─────────────────────────────────────────────────
+//
+// The parser is the source of truth for filename shape; sanity-check its
+// individual branches without going through the filesystem.
+
+test fn parse_part_accepts_valid_up_name() Void!Str {
+  let part = try files::parse_part("0001_init.up.sql")
+  try testing::assert(part.number == 1, "number parsed")
+  try testing::assert(part.name == "0001_init", "name is basename")
+  try testing::assert(part.filename == "0001_init.up.sql", "filename preserved")
+  try testing::assert(part.direction == types::Direction::up, "up direction")
+  testing::pass()
+}
+
+test fn parse_part_accepts_valid_down_name() Void!Str {
+  let part = try files::parse_part("0042_add_index.down.sql")
+  try testing::assert(part.number == 42, "number parsed")
+  try testing::assert(part.name == "0042_add_index", "name is basename")
+  testing::assert(part.direction == types::Direction::down, "down direction")
+}
+
+test fn parse_part_rejects_missing_direction() Void!Str {
+  match files::parse_part("0001_init.sql") {
+    ok(_) => testing::fail("expected error for two-part filename"),
+    err(_) => testing::pass(),
+  }
+}
+
+test fn parse_part_rejects_wrong_extension() Void!Str {
+  match files::parse_part("0001_init.up.txt") {
+    ok(_) => testing::fail("expected error for non-sql extension"),
+    err(_) => testing::pass(),
+  }
+}
+
+test fn parse_part_rejects_unknown_direction() Void!Str {
+  match files::parse_part("0001_init.sideways.sql") {
+    ok(_) => testing::fail("expected error for invalid direction"),
+    err(_) => testing::pass(),
+  }
+}
