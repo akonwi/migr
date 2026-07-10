@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout migr
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
+          cache-dependency-path: go.sum
+
+      # Ard has no stable release we can pin to yet, so we track main and
+      # build the compiler from source. Cache invalidates automatically the
+      # next time upstream Ard's HEAD changes.
+      - name: Resolve Ard main HEAD
+        id: ard-head
+        run: |
+          sha=$(git ls-remote https://github.com/akonwi/ard.git HEAD | cut -f1)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Ard compiler
+        id: cache-ard
+        uses: actions/cache@v6
+        with:
+          path: /usr/local/bin/ard
+          key: ard-compiler-${{ runner.os }}-${{ steps.ard-head.outputs.sha }}
+
+      - name: Build Ard compiler
+        if: steps.cache-ard.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://github.com/akonwi/ard.git /tmp/ard
+          cd /tmp/ard/compiler
+          CGO_ENABLED=1 go build --tags=goexperiment.jsonv2 -o /tmp/ard-bin .
+          sudo install /tmp/ard-bin /usr/local/bin/ard
+
+      - name: Verify Ard compiler
+        run: ard version
+
+      - name: Download Go dependencies
+        run: go mod download
+
+      - name: Build migr
+        run: ard build main.ard --out /tmp/migr
+
+      - name: Run Ard tests
+        run: ard test

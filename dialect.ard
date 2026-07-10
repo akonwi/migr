@@ -1,4 +1,5 @@
 use ard/testing
+
 use migr/types
 
 fn infer(database_url: Str) types::Dialect!Str {

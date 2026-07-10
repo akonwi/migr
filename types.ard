@@ -1,4 +1,3 @@
-use ard/maybe
 
 enum Command {
   init,
@@ -12,14 +11,14 @@ enum Command {
 
 fn Command::from(name: Str) Command? {
   match {
-    name == "init" => maybe::some(Command::init),
-    name == "create" => maybe::some(Command::create),
-    name == "up" => maybe::some(Command::up),
-    name == "down" => maybe::some(Command::down),
-    name == "status" => maybe::some(Command::status),
-    name == "validate" => maybe::some(Command::validate),
-    name == "help" => maybe::some(Command::help),
-    _ => maybe::none(),
+    name == "init" => Maybe::new(Command::init),
+    name == "create" => Maybe::new(Command::create),
+    name == "up" => Maybe::new(Command::up),
+    name == "down" => Maybe::new(Command::down),
+    name == "status" => Maybe::new(Command::status),
+    name == "validate" => Maybe::new(Command::validate),
+    name == "help" => Maybe::new(Command::help),
+    _ => Maybe::new(),
   }
 }
 

@@ -1,9 +1,7 @@
-use ard/argv
-use ard/env
-use ard/io
-use ard/maybe
+use go:fmt
 
 use migr/types
+use go:os
 
 fn usage(program: Str) Str {
   "Usage: {program} <command> [options]\n\nCommands:\n  init                Initialize migrations directory\n  create <name>       Create a new migration pair\n  up                  Apply pending migrations\n  down                Roll back the last batch\n  status              Show migration status\n  validate            Validate migration files and DB drift\n  help                Show this help\n\nOptions:\n  --dir <path>              Migrations directory (default: migrations)\n  --database-url <value>    Database URL/path (default: DATABASE_URL env)"
@@ -16,30 +14,39 @@ fn parse_command(name: Str) types::Command!Str {
 
 fn next_arg(arguments: [Str], index: Int, flag: Str) Str!Str {
   match index + 1 < arguments.size() {
-    true => Result::ok(arguments.at(index + 1)),
+    true => Result::ok(arguments.at(index + 1).expect("bounds checked")),
     false => Result::err("Missing value for {flag}"),
   }
 }
 
 fn parse() types::Config!Str {
-  let args = argv::load()
+  // os::Args[0] is the program name; the rest are the actual arguments.
+  let raw = os::Args
+  let program = raw.at(0).expect("os::Args must contain the program name")
+  mut arguments: [Str] = []
+  mut argv_index = 1
+  while argv_index < raw.size() {
+    arguments.push(raw.at(argv_index).expect("in bounds"))
+    argv_index =+ 1
+  }
+
   mut command_name = ""
   mut migrations_dir = "migrations"
-  mut database_url = env::get("DATABASE_URL")
-  mut create_name: Str? = maybe::none()
+  mut database_url = os::LookupEnv("DATABASE_URL")
+  mut create_name: Str? = Maybe::new()
   mut parse_error = ""
 
   mut index = 0
-  while index < args.arguments.size() {
-    let arg = args.arguments.at(index)
+  while index < arguments.size() {
+    let arg = arguments.at(index).expect("bounds checked")
 
     match {
       arg == "--dir" => {
-        migrations_dir = try next_arg(args.arguments, index, "--dir")
+        migrations_dir = try next_arg(arguments, index, "--dir")
         index =+ 2
       },
       arg == "--database-url" => {
-        database_url = maybe::some(try next_arg(args.arguments, index, "--database-url"))
+        database_url = Maybe::new(try next_arg(arguments, index, "--database-url"))
         index =+ 2
       },
       command_name.is_empty() => {
@@ -47,19 +54,19 @@ fn parse() types::Config!Str {
         index =+ 1
       },
       command_name == "create" and create_name.is_none() => {
-        create_name = maybe::some(arg)
+        create_name = Maybe::new(arg)
         index =+ 1
       },
       _ => {
-        parse_error = "Unexpected argument: {arg}\n\n{usage(args.program)}"
-        index = args.arguments.size()
+        parse_error = "Unexpected argument: {arg}\n\n{usage(program)}"
+        index = arguments.size()
       },
     }
   }
 
   match parse_error.is_empty() {
     true => {
-      match not command_name == "create" or create_name.is_some() {
+      match command_name != "create" or create_name.is_some() {
         false => Result::err("create requires a migration name"),
         true => {
           let command = match command_name.is_empty() {
@@ -69,7 +76,7 @@ fn parse() types::Config!Str {
 
           Result::ok(
             types::Config{
-              program: args.program,
+              program: program,
               command: command,
               migrations_dir: migrations_dir,
               database_url: database_url,
@@ -84,5 +91,5 @@ fn parse() types::Config!Str {
 }
 
 fn print_usage(program: Str) {
-  io::print(usage(program))
+  fmt::Println(usage(program))
 }

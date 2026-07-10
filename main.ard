@@ -1,10 +1,16 @@
-use ard/io
+use go:fmt
 
 use migr/cli
 use migr/runner
 
 fn main() {
-  let config = try cli::parse() -> err { io::print("Error: {err}") }
+  let config = try cli::parse() -> err {
+    fmt::Println("Error: {err}")
+    ()
+  }
 
-  try runner::run(config) -> err { io::print("Error: {err}") }
+  try runner::run(config) -> err {
+    fmt::Println("Error: {err}")
+    ()
+  }
 }
