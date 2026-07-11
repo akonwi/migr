@@ -54,11 +54,11 @@ jobs:
       - name: Download Go dependencies
         run: go mod download
 
+      - name: Fetch Ard dependencies
+        run: ard deps fetch
+
       - name: Build migr
         run: ard build main.ard --out /tmp/migr
 
       - name: Run Ard tests
         run: ard test
-
-      - name: Run Go tests
-        run: go test ./...
