@@ -1,13 +1,7 @@
 //go:build tools
 
-// This file pins Go module dependencies referenced only by the
-// Ard-generated code (chi-style), so that `go mod tidy` retains them
-// and records their full go.sum closure. Excluded from normal builds
-// by the `tools` build tag.
+// This file pins Go packages referenced by Ard-generated code so go mod tidy
+// retains the dependency graph needed while checking and building the project.
 package tools
 
-import (
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	_ "modernc.org/sqlite"
-)
+import _ "github.com/akonwi/ard-sql/ffi"

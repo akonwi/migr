@@ -1,5 +1,5 @@
-use decode/decode
-use migr/sql
+use decode
+use sql
 
 fn connect(database_url: Str) sql::Database!Str {
   match database_url.is_empty() {

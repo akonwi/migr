@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "root": "root",
+  "packages": [
+    {
+      "id": "git:795eb0d192b4efcf:56deab7b5e09f2eecd083513a574b048a7c50593",
+      "name": "sql",
+      "git": "https://github.com/akonwi/ard-sql.git",
+      "commit": "56deab7b5e09f2eecd083513a574b048a7c50593",
+      "requested": "56deab7",
+      "integrity": "sha256:403a19675901d5ff436dd405eb69507fd78c8e4c68659b8c52d578f009cb95e5",
+      "dependencies": {
+        "decode": "git:c5125d0dd6cd13cc:e80c2d2178044f91b4b2e308a1f27ac1044cd3c4"
+      }
+    },
+    {
+      "id": "git:c5125d0dd6cd13cc:e80c2d2178044f91b4b2e308a1f27ac1044cd3c4",
+      "name": "decode",
+      "git": "https://github.com/akonwi/ard-decode.git",
+      "commit": "e80c2d2178044f91b4b2e308a1f27ac1044cd3c4",
+      "requested": "e80c2d2",
+      "integrity": "sha256:e9c90c64493d89ff1820f365bd1bc6e738e955d889caa60e7993781d5e448816"
+    },
+    {
+      "id": "root",
+      "name": "migr",
+      "path": ".",
+      "dependencies": {
+        "decode": "git:c5125d0dd6cd13cc:e80c2d2178044f91b4b2e308a1f27ac1044cd3c4",
+        "sql": "git:795eb0d192b4efcf:56deab7b5e09f2eecd083513a574b048a7c50593"
+      }
+    }
+  ]
+}

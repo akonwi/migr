@@ -1,5 +1,5 @@
 use go:fmt
-use migr/sql
+use sql
 
 use migr/cli
 use migr/dialect

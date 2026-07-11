@@ -1,6 +1,6 @@
 use ard/testing
 
-use migr/sql
+use sql
 use migr/store
 
 // All tests use an in-memory SQLite database so state is fully isolated
