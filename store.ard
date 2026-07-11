@@ -1,4 +1,4 @@
-use migr/decode
+use decode/decode
 use migr/sql
 
 fn connect(database_url: Str) sql::Database!Str {

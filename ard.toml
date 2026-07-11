@@ -1,2 +1,5 @@
-ard = ">= 0.24.0"
+ard = ">= 0.26.0"
 name = "migr"
+
+[dependencies]
+decode = { path = "../decode" }

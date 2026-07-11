@@ -1,6 +1,6 @@
 use ard/testing
 
-use migr/decode
+use decode/decode
 use migr/sql
 
 // Integration tests for the sql module + FFI shim.
