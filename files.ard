@@ -22,8 +22,7 @@ fn read_file(path: Str) Str!Str {
 }
 
 fn write_file(path: Str, content: Str) Void!Str {
-  mut bytes = content.bytes()
-  os::WriteFile(path, bytes, 420)
+  os::WriteFile(path, mut content.bytes(), 420)
 }
 
 fn make_dir(path: Str) Void!Str {
@@ -128,7 +127,7 @@ fn sort_migrations(migrations: mut [types::Migration]) [types::Migration] {
     left = left + 1
   }
 
-  migrations
+  deref migrations
 }
 
 fn build_migration_name(number: Int, raw_name: Str) Str {
@@ -145,7 +144,7 @@ fn load(dir: Str) [types::Migration]!Str {
   try ensure_dir_exists(dir)
   let entries = try os::ReadDir(dir)
 
-  mut parts: [types::MigrationPart] = []
+  let parts: mut [types::MigrationPart] = mut []
   for entry in entries {
     if (not entry.IsDir()) and is_migration_sql(entry.Name()) {
       let parsed = try parse_part(entry.Name())
@@ -153,21 +152,21 @@ fn load(dir: Str) [types::Migration]!Str {
     }
   }
 
-  mut migrations: [types::Migration] = []
+  let migrations: mut [types::Migration] = mut []
 
   for part in parts {
     match part.direction {
       types::Direction::up => {
         try testing::assert(
-          not has_migration_name(migrations, part.name),
+          not has_migration_name(deref migrations, part.name),
           "Duplicate up migration: {part.filename}",
         )
         try testing::assert(
-          not has_migration_number(migrations, part.number, part.name),
+          not has_migration_number(deref migrations, part.number, part.name),
           "Duplicate migration number: {part.number}",
         )
         try testing::assert(
-          has_part(parts, part.name, types::Direction::down),
+          has_part(deref parts, part.name, types::Direction::down),
           "Missing down migration for {part.name}",
         )
 
@@ -188,7 +187,7 @@ fn load(dir: Str) [types::Migration]!Str {
     match part.direction {
       types::Direction::down => {
         try testing::assert(
-          has_part(parts, part.name, types::Direction::up),
+          has_part(deref parts, part.name, types::Direction::up),
           "Missing up migration for {part.name}",
         )
       },

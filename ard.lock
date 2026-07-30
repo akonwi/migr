@@ -3,31 +3,31 @@
   "root": "root",
   "packages": [
     {
-      "id": "git:795eb0d192b4efcf:10c30d5393708ac0fea6a12e0a6320d35a4cdf13",
+      "id": "git:795eb0d192b4efcf:4ed13333dcab46e957ca59bbadcee9fc97fcbf99",
       "name": "sql",
       "git": "https://github.com/akonwi/ard-sql.git",
-      "commit": "10c30d5393708ac0fea6a12e0a6320d35a4cdf13",
-      "requested": "10c30d5",
-      "integrity": "sha256:d4d409ed3eab45d97ecb26beb5559f7543895b451bde1db112419916139fabac",
+      "commit": "4ed13333dcab46e957ca59bbadcee9fc97fcbf99",
+      "requested": "latest",
+      "integrity": "sha256:41449fa1d1aa089724de5edf73ab6979bce7ae4b63b6407896b095157eae470e",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:784403fe1f8b176786a13bcaabfeacffcf1b7c54"
+        "decode": "git:c5125d0dd6cd13cc:b730984077e4abb25cfccefc5778c54db2624fac"
       }
     },
     {
-      "id": "git:c5125d0dd6cd13cc:784403fe1f8b176786a13bcaabfeacffcf1b7c54",
+      "id": "git:c5125d0dd6cd13cc:b730984077e4abb25cfccefc5778c54db2624fac",
       "name": "decode",
       "git": "https://github.com/akonwi/ard-decode.git",
-      "commit": "784403fe1f8b176786a13bcaabfeacffcf1b7c54",
-      "requested": "784403f",
-      "integrity": "sha256:7967da1079305baa36fb0b1d85875da171d4789fc716e7444445bfeb8816c867"
+      "commit": "b730984077e4abb25cfccefc5778c54db2624fac",
+      "requested": "latest",
+      "integrity": "sha256:9251a9f88de911dda77ffaa01849e0e31f9ec0dcb0a1138a57dd5b2b033e2c1f"
     },
     {
       "id": "root",
       "name": "migr",
       "path": ".",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:784403fe1f8b176786a13bcaabfeacffcf1b7c54",
-        "sql": "git:795eb0d192b4efcf:10c30d5393708ac0fea6a12e0a6320d35a4cdf13"
+        "decode": "git:c5125d0dd6cd13cc:b730984077e4abb25cfccefc5778c54db2624fac",
+        "sql": "git:795eb0d192b4efcf:4ed13333dcab46e957ca59bbadcee9fc97fcbf99"
       }
     }
   ]
