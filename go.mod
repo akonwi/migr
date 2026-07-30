@@ -2,7 +2,7 @@ module migr
 
 go 1.26
 
-require github.com/akonwi/ard-sql v0.0.0-20260711144037-56deab7b5e09
+require github.com/akonwi/ard-sql v0.0.0-20260730112014-4ed13333dcab
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect

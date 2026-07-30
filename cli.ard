@@ -23,7 +23,7 @@ fn parse() types::Config!Str {
   // os::Args[0] is the program name; the rest are the actual arguments.
   let raw = os::Args
   let program = raw.at(0).expect("os::Args must contain the program name")
-  mut arguments: [Str] = []
+  let arguments = mut List::new<Str>()
   mut argv_index = 1
   while argv_index < raw.size() {
     arguments.push(raw.at(argv_index).expect("in bounds"))
@@ -42,11 +42,11 @@ fn parse() types::Config!Str {
 
     match {
       arg == "--dir" => {
-        migrations_dir = try next_arg(arguments, index, "--dir")
+        migrations_dir = try next_arg(deref arguments, index, "--dir")
         index =+ 2
       },
       arg == "--database-url" => {
-        database_url = Maybe::new(try next_arg(arguments, index, "--database-url"))
+        database_url = Maybe::new(try next_arg(deref arguments, index, "--database-url"))
         index =+ 2
       },
       command_name.is_empty() => {
