@@ -1,9 +1,9 @@
-use go:fmt
-use go:strconv
 use ard/testing
 
+use go:fmt
 use migr/types
 use go:os
+use go:strconv
 use go:strings
 
 fn is_dir(path: Str) Bool {
@@ -51,7 +51,10 @@ fn parse_part(filename: Str) types::MigrationPart!Str {
   let pieces = strings::Split(filename, ".")
 
   try testing::assert(pieces.size() == 3, "Invalid migration filename: {filename}")
-  try testing::assert(pieces.at(2).expect("bounds checked") == "sql", "Invalid migration filename: {filename}")
+  try testing::assert(
+    pieces.at(2).expect("bounds checked") == "sql",
+    "Invalid migration filename: {filename}",
+  )
 
   let direction = try parse_direction(pieces.at(1).expect("bounds checked"))
   let base = pieces.at(0).expect("bounds checked")

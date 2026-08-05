@@ -23,9 +23,7 @@ fn is_applied(db: sql::Database, name: Str) Bool!Str {
     0 => Result::ok(false),
     _ => {
       let row = rows.at(0).expect("size checked")
-      let count = try decode::run(row, decode::field("count", decode::int)) -> err {
-        Result::err(err.to_str())
-      }
+      let count = try decode::run(row, decode::field("count", decode::int)) -> err { Result::err(err.to_str()) }
       Result::ok(count > 0)
     },
   }
@@ -38,9 +36,7 @@ fn latest_batch(db: sql::Database) Int!Str {
     0 => Result::ok(0),
     _ => {
       let row = rows.at(0).expect("size checked")
-      let max_batch = try decode::run(row, decode::field("max_batch", decode::int)) -> err {
-        Result::err(err.to_str())
-      }
+      let max_batch = try decode::run(row, decode::field("max_batch", decode::int)) -> err { Result::err(err.to_str()) }
       Result::ok(max_batch)
     },
   }
@@ -64,9 +60,7 @@ fn applied(db: sql::Database) [Str]!Str {
 
   let names: mut [Str] = mut []
   for row in rows {
-    let name = try decode::run(row, decode::field("name", decode::string)) -> err {
-      Result::err(err.to_str())
-    }
+    let name = try decode::run(row, decode::field("name", decode::string)) -> err { Result::err(err.to_str()) }
     names.push(name)
   }
 
@@ -80,9 +74,7 @@ fn last_batch_migrations(db: sql::Database) [Str]!Str {
 
   let names: mut [Str] = mut []
   for row in rows {
-    let name = try decode::run(row, decode::field("name", decode::string)) -> err {
-      Result::err(err.to_str())
-    }
+    let name = try decode::run(row, decode::field("name", decode::string)) -> err { Result::err(err.to_str()) }
     names.push(name)
   }
 

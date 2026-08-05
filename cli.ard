@@ -1,5 +1,4 @@
 use go:fmt
-
 use migr/types
 use go:os
 

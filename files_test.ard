@@ -1,9 +1,8 @@
 use ard/testing
 
-use go:os
-
 use migr/files
 use migr/types
+use go:os
 
 // Discovery tests operate on real files inside per-test temp directories.
 // Each test creates its dir with os::MkdirTemp, writes migration file

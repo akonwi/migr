@@ -1,5 +1,4 @@
 use go:fmt
-
 use migr/cli
 use migr/runner
 
