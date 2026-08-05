@@ -1,11 +1,10 @@
 use go:fmt
-use sql
-
 use migr/cli
 use migr/dialect
 use migr/files
 use migr/store
 use migr/types
+use sql
 
 fn has_name(values: [Str], target: Str) Bool {
   mut found = false

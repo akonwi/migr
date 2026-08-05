@@ -1,7 +1,7 @@
 use ard/testing
 
-use sql
 use migr/store
+use sql
 
 // All tests use an in-memory SQLite database so state is fully isolated
 // per test and no filesystem work is needed.
@@ -65,10 +65,7 @@ test fn record_marks_migration_as_applied() Void!Str {
 
   let names = try store::applied(db)
   try testing::assert(names.size() == 1, "applied() lists one entry")
-  try testing::assert(
-    names.at(0).expect("bounds") == "0001_init",
-    "applied() returns the recorded name",
-  )
+  try testing::assert(names.at(0).expect("bounds") == "0001_init", "applied() returns the recorded name")
 
   try db.close()
   testing::pass()
@@ -126,7 +123,8 @@ test fn latest_batch_reflects_highest_recorded_batch() Void!Str {
   try tx2.commit()
 
   let tx3 = try db.begin()
-  try store::record(tx3, "0004_d", 5)  // skipped-forward batch, still MAX
+  try store::record(tx3, "0004_d", 5)
+  // skipped-forward batch, still MAX
   try tx3.commit()
 
   try testing::assert((try store::latest_batch(db)) == 5, "latest is MAX(batch), not COUNT")
@@ -153,10 +151,7 @@ test fn last_batch_migrations_returns_only_highest_batch_in_desc_order() Void!St
 
   let last = try store::last_batch_migrations(db)
   try testing::assert(last.size() == 2, "only batch-2 migrations returned")
-  try testing::assert(
-    last.at(0).expect("bounds") == "0005_e",
-    "descending order (last recorded first)",
-  )
+  try testing::assert(last.at(0).expect("bounds") == "0005_e", "descending order (last recorded first)")
   try testing::assert(last.at(1).expect("bounds") == "0004_d", "descending order (0004 second)")
 
   try db.close()
@@ -178,7 +173,7 @@ test fn remove_deletes_a_recorded_migration() Void!Str {
   try tx2.commit()
 
   try testing::assert(try store::is_applied(db, "0001_a"), "0001_a still applied")
-  try testing::assert(not (try store::is_applied(db, "0002_b")), "0002_b no longer applied")
+  try testing::assert(not try store::is_applied(db, "0002_b"), "0002_b no longer applied")
 
   let names = try store::applied(db)
   try testing::assert(names.size() == 1, "only one name remains")
@@ -220,7 +215,7 @@ test fn record_inside_rolled_back_transaction_is_not_persisted() Void!Str {
   try store::record(tx, "0001_a", 1)
   try tx.rollback()
 
-  try testing::assert(not (try store::is_applied(db, "0001_a")), "rollback discarded the record")
+  try testing::assert(not try store::is_applied(db, "0001_a"), "rollback discarded the record")
   try testing::assert((try store::latest_batch(db)) == 0, "no batches persisted")
 
   try db.close()
