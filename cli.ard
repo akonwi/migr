@@ -3,7 +3,22 @@ use migr/types
 use go:os
 
 fn usage(program: Str) Str {
-  "Usage: {program} <command> [options]\n\nCommands:\n  init                Initialize migrations directory\n  create <name>       Create a new migration pair\n  up                  Apply pending migrations\n  down                Roll back the last batch\n  status              Show migration status\n  validate            Validate migration files and DB drift\n  help                Show this help\n\nOptions:\n  --dir <path>              Migrations directory (default: migrations)\n  --database-url <value>    Database URL/path (default: DATABASE_URL env)"
+  `
+    Usage: {program} <command> [options]
+
+    Commands:
+      init                Initialize migrations directory
+      create <name>       Create a new migration pair
+      up                  Apply pending migrations
+      down                Roll back the last batch
+      status              Show migration status
+      validate            Validate migration files and DB drift
+      help                Show this help
+
+    Options:
+      --dir <path>              Migrations directory (default: migrations)
+      --database-url <value>    Database URL/path (default: DATABASE_URL env)
+    `
 }
 
 fn parse_command(name: Str) types::Command!Str {
