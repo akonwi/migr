@@ -10,7 +10,13 @@ fn connect(database_url: Str) sql::Database!Str {
 
 fn init_table(db: sql::Database) Void!Str {
   try db.exec(
-    "CREATE TABLE IF NOT EXISTS schema_migrations (\n      name TEXT PRIMARY KEY,\n      batch INTEGER NOT NULL,\n      applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP\n    )",
+    `
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        name TEXT PRIMARY KEY,
+        batch INTEGER NOT NULL,
+        applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+      `,
   )
 
   Result::ok(())
