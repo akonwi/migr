@@ -2,10 +2,10 @@ use go:fmt
 use migr/types
 use go:os
 
-fn usage(program: Str) Str {
+fn usage() Str {
   `
-    Usage: {program} <command> [options]
-
+    Usage: migr <command> [options]
+    
     Commands:
       init                Initialize migrations directory
       create <name>       Create a new migration pair
@@ -14,11 +14,15 @@ fn usage(program: Str) Str {
       status              Show migration status
       validate            Validate migration files and DB drift
       help                Show this help
-
+    
     Options:
       --dir <path>              Migrations directory (default: migrations)
       --database-url <value>    Database URL/path (default: DATABASE_URL env)
     `
+}
+
+fn print_usage() {
+  fmt::Println(usage())
 }
 
 fn parse_command(name: Str) types::Command!Str {
@@ -34,33 +38,25 @@ fn next_arg(arguments: [Str], index: Int, flag: Str) Str!Str {
 }
 
 fn parse() types::Config!Str {
-  // os::Args[0] is the program name; the rest are the actual arguments.
-  let raw = os::Args
-  let program = raw.at(0).expect("os::Args must contain the program name")
-  let arguments = mut List::new<Str>()
-  mut argv_index = 1
-  while argv_index < raw.size() {
-    arguments.push(raw.at(argv_index).expect("in bounds"))
-    argv_index =+ 1
-  }
-
+  let arguments = os::Args.slice(1).expect("os::Args must contain the program name").to_list()
+  
   mut command_name = ""
   mut migrations_dir = "migrations"
   mut database_url = os::LookupEnv("DATABASE_URL")
   mut create_name: Str? = Maybe::new()
   mut parse_error = ""
-
+  
   mut index = 0
   while index < arguments.size() {
     let arg = arguments.at(index).expect("bounds checked")
-
+    
     match {
       arg == "--dir" => {
-        migrations_dir = try next_arg(deref arguments, index, "--dir")
+        migrations_dir = try next_arg(arguments, index, "--dir")
         index =+ 2
       },
       arg == "--database-url" => {
-        database_url = Maybe::new(try next_arg(deref arguments, index, "--database-url"))
+        database_url = Maybe::new(try next_arg(arguments, index, "--database-url"))
         index =+ 2
       },
       command_name.is_empty() => {
@@ -72,12 +68,12 @@ fn parse() types::Config!Str {
         index =+ 1
       },
       _ => {
-        parse_error = "Unexpected argument: {arg}\n\n{usage(program)}"
+        parse_error = "Unexpected argument: {arg}\n\n{usage()}"
         index = arguments.size()
       },
     }
   }
-
+  
   match parse_error.is_empty() {
     true => {
       match command_name != "create" or create_name.is_some() {
@@ -87,10 +83,9 @@ fn parse() types::Config!Str {
             true => types::Command::help,
             false => try parse_command(command_name),
           }
-
+          
           Result::ok(
             types::Config{
-              program: program,
               command: command,
               migrations_dir: migrations_dir,
               database_url: database_url,
@@ -102,8 +97,4 @@ fn parse() types::Config!Str {
     },
     false => Result::err(parse_error),
   }
-}
-
-fn print_usage(program: Str) {
-  fmt::Println(usage(program))
 }

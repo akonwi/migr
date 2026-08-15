@@ -26,6 +26,15 @@ enum Dialect {
   sqlite,
 }
 
+fn Dialect::from(str: Str) Dialect {
+  match {
+    // this is technically not correct but ok for now
+    str.starts_with("postgres://") => Dialect::postgres,
+    str.starts_with("postgresql://") => Dialect::postgres,
+    _ => Dialect::sqlite,
+  }
+}
+
 impl Dialect {
   fn name() Str {
     match self {
@@ -41,7 +50,6 @@ enum Direction {
 }
 
 struct Config {
-  program: Str,
   command: Command,
   migrations_dir: Str,
   database_url: Str?,

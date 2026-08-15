@@ -34,55 +34,55 @@ fn open_database(config: types::Config) sql::Database!Str {
 fn run_up(config: types::Config) Void!Str {
   let db = try open_database(config)
   try store::init_table(db)
-
+  
   let all_migrations = try files::load(config.migrations_dir)
   let next_batch = (try store::latest_batch(db)) + 1
-
+  
   mut applied_count = 0
   for migration in all_migrations {
     let already_applied = try store::is_applied(db, migration.name)
-
+    
     match already_applied {
       true => (),
       false => {
         let migration_sql = try files::read_sql(migration.up_path)
         let tx = try db.begin()
-
+        
         try tx.exec(migration_sql) -> err {
           let _ = tx.rollback()
           Result::err(err)
         }
-
+        
         try store::record(tx, migration.name, next_batch) -> err {
           let _ = tx.rollback()
           Result::err(err)
         }
-
+        
         try tx.commit() -> err {
           let _ = tx.rollback()
           Result::err(err)
         }
-
+        
         fmt::Println("[UP] {migration.name}")
         applied_count = applied_count + 1
       },
     }
   }
-
+  
   match applied_count {
     0 => fmt::Println("No pending migrations"),
     _ => fmt::Println("{applied_count} migration(s) applied"),
   }
-
+  
   Result::ok(())
 }
 
 fn run_down(config: types::Config) Void!Str {
   let db = try open_database(config)
   try store::init_table(db)
-
+  
   let batch_names = try store::last_batch_migrations(db)
-
+  
   match batch_names.size() {
     0 => {
       fmt::Println("No migrations to rollback")
@@ -93,30 +93,30 @@ fn run_down(config: types::Config) Void!Str {
         let down_path = "{config.migrations_dir}/{migration_name}.down.sql"
         let _ = try files::read_sql(down_path)
       }
-
+      
       for migration_name in batch_names {
         let down_path = "{config.migrations_dir}/{migration_name}.down.sql"
         let migration_sql = try files::read_sql(down_path)
         let tx = try db.begin()
-
+        
         try tx.exec(migration_sql) -> err {
           let _ = tx.rollback()
           Result::err(err)
         }
-
+        
         try store::remove(tx, migration_name) -> err {
           let _ = tx.rollback()
           Result::err(err)
         }
-
+        
         try tx.commit() -> err {
           let _ = tx.rollback()
           Result::err(err)
         }
-
+        
         fmt::Println("[DOWN] {migration_name}")
       }
-
+      
       fmt::Println("1 batch rolled back")
       Result::ok(())
     },
@@ -126,10 +126,10 @@ fn run_down(config: types::Config) Void!Str {
 fn run_status(config: types::Config) Void!Str {
   let db = try open_database(config)
   try store::init_table(db)
-
+  
   let all_migrations = try files::load(config.migrations_dir)
   let applied = try store::applied(db)
-
+  
   fmt::Println("=== Migration Status ===")
   for migration in all_migrations {
     match has_name(applied, migration.name) {
@@ -137,7 +137,7 @@ fn run_status(config: types::Config) Void!Str {
       false => fmt::Println("[PENDING] {migration.name}"),
     }
   }
-
+  
   for name in applied {
     mut exists_on_disk = false
     for migration in all_migrations {
@@ -145,13 +145,13 @@ fn run_status(config: types::Config) Void!Str {
         exists_on_disk = true
       }
     }
-
+    
     match exists_on_disk {
       true => (),
       false => fmt::Println("[MISSING] {name}"),
     }
   }
-
+  
   Result::ok(())
 }
 
@@ -183,7 +183,7 @@ fn run_validate_db(config: types::Config, migrations: [types::Migration]) Void!S
   try store::init_table(db)
   let applied = try store::applied(db)
   let missing = find_missing_applied(migrations, applied)
-
+  
   match missing.is_empty() {
     true => {
       fmt::Println("Database drift validation passed")
@@ -197,7 +197,7 @@ fn run_validate(config: types::Config) Void!Str {
   let migrations = try files::load(config.migrations_dir)
   fmt::Println("Migration files are valid")
   fmt::Println("Found {migrations.size()} migration pair(s)")
-
+  
   let database_url = config.database_url.or("").trim()
   match database_url.is_empty() {
     true => {
@@ -211,7 +211,7 @@ fn run_validate(config: types::Config) Void!Str {
 fn run(config: types::Config) Void!Str {
   match config.command {
     types::Command::help => {
-      cli::print_usage(config.program)
+      cli::print_usage()
       Result::ok(())
     },
     types::Command::init => files::init(config.migrations_dir),

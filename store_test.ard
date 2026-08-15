@@ -28,19 +28,19 @@ test fn init_table_is_idempotent() Void!Str {
 
 test fn fresh_table_has_no_applied_migrations() Void!Str {
   let db = try fresh_db()
-
+  
   let names = try store::applied(db)
   try testing::assert(names.size() == 0, "applied() empty on fresh table")
-
+  
   let batch = try store::latest_batch(db)
   try testing::assert(batch == 0, "latest_batch() == 0 with COALESCE(MAX, 0)")
-
+  
   let missing = try store::is_applied(db, "anything")
   try testing::assert(not missing, "is_applied() false for unknown name")
-
+  
   let last = try store::last_batch_migrations(db)
   try testing::assert(last.size() == 0, "last_batch_migrations() empty")
-
+  
   try db.close()
   testing::pass()
 }
@@ -49,43 +49,43 @@ test fn fresh_table_has_no_applied_migrations() Void!Str {
 
 test fn record_marks_migration_as_applied() Void!Str {
   let db = try fresh_db()
-
+  
   let tx = try db.begin()
   try store::record(tx, "0001_init", 1)
   try tx.commit()
-
+  
   let applied = try store::is_applied(db, "0001_init")
   try testing::assert(applied, "recorded migration reports as applied")
-
+  
   let others = try store::is_applied(db, "0002_other")
   try testing::assert(not others, "unrelated name still reports as not applied")
-
+  
   let batch = try store::latest_batch(db)
   try testing::assert(batch == 1, "latest_batch == 1")
-
+  
   let names = try store::applied(db)
   try testing::assert(names.size() == 1, "applied() lists one entry")
   try testing::assert(names.at(0).expect("bounds") == "0001_init", "applied() returns the recorded name")
-
+  
   try db.close()
   testing::pass()
 }
 
 test fn applied_returns_all_names_in_ascending_order() Void!Str {
   let db = try fresh_db()
-
+  
   let tx = try db.begin()
   try store::record(tx, "0002_second", 1)
   try store::record(tx, "0001_first", 1)
   try store::record(tx, "0003_third", 1)
   try tx.commit()
-
+  
   let names = try store::applied(db)
   try testing::assert(names.size() == 3, "three names returned")
   try testing::assert(names.at(0).expect("bounds") == "0001_first", "ascending by name (0001)")
   try testing::assert(names.at(1).expect("bounds") == "0002_second", "ascending by name (0002)")
   try testing::assert(names.at(2).expect("bounds") == "0003_third", "ascending by name (0003)")
-
+  
   try db.close()
   testing::pass()
 }
@@ -94,66 +94,66 @@ test fn applied_returns_all_names_in_ascending_order() Void!Str {
 
 test fn multiple_migrations_in_one_batch_share_batch_number() Void!Str {
   let db = try fresh_db()
-
+  
   let tx = try db.begin()
   try store::record(tx, "0001_a", 1)
   try store::record(tx, "0002_b", 1)
   try store::record(tx, "0003_c", 1)
   try tx.commit()
-
+  
   try testing::assert((try store::latest_batch(db)) == 1, "batch is 1")
-
+  
   let last = try store::last_batch_migrations(db)
   try testing::assert(last.size() == 3, "all three included in last batch")
-
+  
   try db.close()
   testing::pass()
 }
 
 test fn latest_batch_reflects_highest_recorded_batch() Void!Str {
   let db = try fresh_db()
-
+  
   let tx1 = try db.begin()
   try store::record(tx1, "0001_a", 1)
   try tx1.commit()
-
+  
   let tx2 = try db.begin()
   try store::record(tx2, "0002_b", 2)
   try store::record(tx2, "0003_c", 2)
   try tx2.commit()
-
+  
   let tx3 = try db.begin()
   try store::record(tx3, "0004_d", 5)
   // skipped-forward batch, still MAX
   try tx3.commit()
-
+  
   try testing::assert((try store::latest_batch(db)) == 5, "latest is MAX(batch), not COUNT")
-
+  
   try db.close()
   testing::pass()
 }
 
 test fn last_batch_migrations_returns_only_highest_batch_in_desc_order() Void!Str {
   let db = try fresh_db()
-
+  
   // Batch 1: three migrations
   let tx1 = try db.begin()
   try store::record(tx1, "0001_a", 1)
   try store::record(tx1, "0002_b", 1)
   try store::record(tx1, "0003_c", 1)
   try tx1.commit()
-
+  
   // Batch 2: two migrations (this is the "last batch")
   let tx2 = try db.begin()
   try store::record(tx2, "0004_d", 2)
   try store::record(tx2, "0005_e", 2)
   try tx2.commit()
-
+  
   let last = try store::last_batch_migrations(db)
   try testing::assert(last.size() == 2, "only batch-2 migrations returned")
   try testing::assert(last.at(0).expect("bounds") == "0005_e", "descending order (last recorded first)")
   try testing::assert(last.at(1).expect("bounds") == "0004_d", "descending order (0004 second)")
-
+  
   try db.close()
   testing::pass()
 }
@@ -162,46 +162,46 @@ test fn last_batch_migrations_returns_only_highest_batch_in_desc_order() Void!St
 
 test fn remove_deletes_a_recorded_migration() Void!Str {
   let db = try fresh_db()
-
+  
   let tx1 = try db.begin()
   try store::record(tx1, "0001_a", 1)
   try store::record(tx1, "0002_b", 1)
   try tx1.commit()
-
+  
   let tx2 = try db.begin()
   try store::remove(tx2, "0002_b")
   try tx2.commit()
-
+  
   try testing::assert(try store::is_applied(db, "0001_a"), "0001_a still applied")
   try testing::assert(not try store::is_applied(db, "0002_b"), "0002_b no longer applied")
-
+  
   let names = try store::applied(db)
   try testing::assert(names.size() == 1, "only one name remains")
   try testing::assert(names.at(0).expect("bounds") == "0001_a", "the surviving name")
-
+  
   try db.close()
   testing::pass()
 }
 
 test fn removing_all_migrations_in_a_batch_drops_the_batch() Void!Str {
   let db = try fresh_db()
-
+  
   let tx1 = try db.begin()
   try store::record(tx1, "0001_a", 1)
   try store::record(tx1, "0002_b", 2)
   try tx1.commit()
-
+  
   // Roll back batch 2.
   let tx2 = try db.begin()
   try store::remove(tx2, "0002_b")
   try tx2.commit()
-
+  
   try testing::assert((try store::latest_batch(db)) == 1, "latest batch is now 1")
-
+  
   let last = try store::last_batch_migrations(db)
   try testing::assert(last.size() == 1, "only the remaining migration")
   try testing::assert(last.at(0).expect("bounds") == "0001_a", "correct survivor")
-
+  
   try db.close()
   testing::pass()
 }
@@ -210,14 +210,14 @@ test fn removing_all_migrations_in_a_batch_drops_the_batch() Void!Str {
 
 test fn record_inside_rolled_back_transaction_is_not_persisted() Void!Str {
   let db = try fresh_db()
-
+  
   let tx = try db.begin()
   try store::record(tx, "0001_a", 1)
   try tx.rollback()
-
+  
   try testing::assert(not try store::is_applied(db, "0001_a"), "rollback discarded the record")
   try testing::assert((try store::latest_batch(db)) == 0, "no batches persisted")
-
+  
   try db.close()
   testing::pass()
 }

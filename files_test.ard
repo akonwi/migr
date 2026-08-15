@@ -43,16 +43,16 @@ test fn load_empty_directory_returns_no_migrations() Void!Str {
 test fn load_single_pair_returns_one_migration_with_correct_paths() Void!Str {
   let dir = try make_temp_dir()
   try write_pair(dir, "0001_init", "CREATE TABLE t (id INT);", "DROP TABLE t;")
-
+  
   let migrations = try files::load(dir)
   try testing::assert(migrations.size() == 1, "one migration discovered")
-
+  
   let m = migrations.at(0).expect("bounds")
   try testing::assert(m.number == 1, "number parsed from filename")
   try testing::assert(m.name == "0001_init", "name is the pre-extension basename")
   try testing::assert(m.up_path == "{dir}/0001_init.up.sql", "up_path assembled")
   try testing::assert(m.down_path == "{dir}/0001_init.down.sql", "down_path assembled")
-
+  
   cleanup(dir)
   testing::pass()
 }
@@ -63,13 +63,13 @@ test fn load_sorts_multiple_migrations_by_number_ascending() Void!Str {
   try write_pair(dir, "0003_third", "-- up3", "-- down3")
   try write_pair(dir, "0001_first", "-- up1", "-- down1")
   try write_pair(dir, "0002_second", "-- up2", "-- down2")
-
+  
   let migrations = try files::load(dir)
   try testing::assert(migrations.size() == 3, "three migrations")
   try testing::assert(migrations.at(0).expect("bounds").number == 1, "first is number 1")
   try testing::assert(migrations.at(1).expect("bounds").number == 2, "second is number 2")
   try testing::assert(migrations.at(2).expect("bounds").number == 3, "third is number 3")
-
+  
   cleanup(dir)
   testing::pass()
 }
@@ -79,10 +79,10 @@ test fn load_ignores_non_sql_files() Void!Str {
   try write_pair(dir, "0001_init", "-- up", "-- down")
   try write_file("{dir}/README.md", "notes")
   try write_file("{dir}/.gitkeep", "")
-
+  
   let migrations = try files::load(dir)
   try testing::assert(migrations.size() == 1, "non-sql files ignored")
-
+  
   cleanup(dir)
   testing::pass()
 }
@@ -99,7 +99,7 @@ test fn load_errors_on_missing_directory() Void!Str {
 test fn load_errors_when_up_has_no_matching_down() Void!Str {
   let dir = try make_temp_dir()
   try write_file("{dir}/0001_init.up.sql", "-- up only")
-
+  
   match files::load(dir) {
     ok(_) => {
       cleanup(dir)
@@ -115,7 +115,7 @@ test fn load_errors_when_up_has_no_matching_down() Void!Str {
 test fn load_errors_when_down_has_no_matching_up() Void!Str {
   let dir = try make_temp_dir()
   try write_file("{dir}/0001_init.down.sql", "-- down only")
-
+  
   match files::load(dir) {
     ok(_) => {
       cleanup(dir)
@@ -132,7 +132,7 @@ test fn load_errors_on_duplicate_migration_number() Void!Str {
   let dir = try make_temp_dir()
   try write_pair(dir, "0001_first", "-- up", "-- down")
   try write_pair(dir, "0001_second", "-- up", "-- down")
-
+  
   match files::load(dir) {
     ok(_) => {
       cleanup(dir)
@@ -149,7 +149,7 @@ test fn load_errors_on_malformed_filename_without_number_prefix() Void!Str {
   let dir = try make_temp_dir()
   // No leading number: parse_part requires a positive integer prefix.
   try write_pair(dir, "init", "-- up", "-- down")
-
+  
   match files::load(dir) {
     ok(_) => {
       cleanup(dir)

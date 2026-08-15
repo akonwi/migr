@@ -18,13 +18,13 @@ fn init_table(db: sql::Database) Void!Str {
       )
       `,
   )
-
+  
   Result::ok(())
 }
 
 fn is_applied(db: sql::Database, name: Str) Bool!Str {
   let rows = try db.query("SELECT COUNT(*) AS count FROM schema_migrations WHERE name = @name").all(["name": name])
-
+  
   match rows.size() {
     0 => Result::ok(false),
     _ => {
@@ -37,7 +37,7 @@ fn is_applied(db: sql::Database, name: Str) Bool!Str {
 
 fn latest_batch(db: sql::Database) Int!Str {
   let rows = try db.query("SELECT COALESCE(MAX(batch), 0) AS max_batch FROM schema_migrations").all([:])
-
+  
   match rows.size() {
     0 => Result::ok(0),
     _ => {
@@ -52,7 +52,7 @@ fn record(tx: sql::Transaction, name: Str, batch: Int) Void!Str {
   try tx.query(
     "INSERT INTO schema_migrations (name, batch) VALUES (@name, @batch)",
   ).run(["name": name, "batch": batch])
-
+  
   Result::ok(())
 }
 
@@ -63,26 +63,26 @@ fn remove(tx: sql::Transaction, name: Str) Void!Str {
 
 fn applied(db: sql::Database) [Str]!Str {
   let rows = try db.query("SELECT name FROM schema_migrations ORDER BY name ASC").all([:])
-
+  
   let names: mut [Str] = mut []
   for row in rows {
     let name = try decode::run(row, decode::field("name", decode::string)) -> err { Result::err(err.to_str()) }
     names.push(name)
   }
-
-  Result::ok(deref names)
+  
+  Result::ok(names.@)
 }
 
 fn last_batch_migrations(db: sql::Database) [Str]!Str {
   let rows = try db.query(
     "SELECT name FROM schema_migrations WHERE batch = (SELECT COALESCE(MAX(batch), 0) FROM schema_migrations) ORDER BY name DESC",
   ).all([:])
-
+  
   let names: mut [Str] = mut []
   for row in rows {
     let name = try decode::run(row, decode::field("name", decode::string)) -> err { Result::err(err.to_str()) }
     names.push(name)
   }
-
-  Result::ok(deref names)
+  
+  Result::ok(names.@)
 }

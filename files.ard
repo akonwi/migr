@@ -49,28 +49,28 @@ fn parse_direction(raw: Str) types::Direction!Str {
 
 fn parse_part(filename: Str) types::MigrationPart!Str {
   let pieces = strings::Split(filename, ".")
-
+  
   try testing::assert(pieces.size() == 3, "Invalid migration filename: {filename}")
   try testing::assert(
     pieces.at(2).expect("bounds checked") == "sql",
     "Invalid migration filename: {filename}",
   )
-
+  
   let direction = try parse_direction(pieces.at(1).expect("bounds checked"))
   let base = pieces.at(0).expect("bounds checked")
   let base_parts = strings::Split(base, "_")
-
+  
   try testing::assert(
     base_parts.size() >= 2,
     "Migration filename must be <number>_<name>.<up|down>.sql: {filename}",
   )
-
+  
   let number = match strconv::Atoi(base_parts.at(0).expect("bounds checked")) {
     ok(n) => n,
     err(_) => 0,
   }
   try testing::assert(number > 0, "Migration number must be a positive integer: {filename}")
-
+  
   Result::ok(
     types::MigrationPart{
       number: number,
@@ -129,8 +129,8 @@ fn sort_migrations(migrations: mut [types::Migration]) [types::Migration] {
     }
     left = left + 1
   }
-
-  deref migrations
+  
+  migrations.@
 }
 
 fn build_migration_name(number: Int, raw_name: Str) Str {
@@ -146,7 +146,7 @@ fn build_migration_name(number: Int, raw_name: Str) Str {
 fn load(dir: Str) [types::Migration]!Str {
   try ensure_dir_exists(dir)
   let entries = try os::ReadDir(dir)
-
+  
   let parts: mut [types::MigrationPart] = mut []
   for entry in entries {
     if (not entry.IsDir()) and is_migration_sql(entry.Name()) {
@@ -154,25 +154,25 @@ fn load(dir: Str) [types::Migration]!Str {
       parts.push(parsed)
     }
   }
-
+  
   let migrations: mut [types::Migration] = mut []
-
+  
   for part in parts {
     match part.direction {
       types::Direction::up => {
         try testing::assert(
-          not has_migration_name(deref migrations, part.name),
+          not has_migration_name(migrations.@, part.name),
           "Duplicate up migration: {part.filename}",
         )
         try testing::assert(
-          not has_migration_number(deref migrations, part.number, part.name),
+          not has_migration_number(migrations.@, part.number, part.name),
           "Duplicate migration number: {part.number}",
         )
         try testing::assert(
-          has_part(deref parts, part.name, types::Direction::down),
+          has_part(parts.@, part.name, types::Direction::down),
           "Missing down migration for {part.name}",
         )
-
+        
         let _ = migrations.push(
           types::Migration{
             number: part.number,
@@ -185,26 +185,26 @@ fn load(dir: Str) [types::Migration]!Str {
       types::Direction::down => (),
     }
   }
-
+  
   for part in parts {
     match part.direction {
       types::Direction::down => {
         try testing::assert(
-          has_part(deref parts, part.name, types::Direction::up),
+          has_part(parts.@, part.name, types::Direction::up),
           "Missing up migration for {part.name}",
         )
       },
       types::Direction::up => (),
     }
   }
-
+  
   Result::ok(sort_migrations(migrations))
 }
 
 fn next_number(dir: Str) Int!Str {
   try ensure_dir_exists(dir)
   let entries = try os::ReadDir(dir)
-
+  
   mut max_number = 0
   for entry in entries {
     if (not entry.IsDir()) and is_migration_sql(entry.Name()) {
@@ -214,7 +214,7 @@ fn next_number(dir: Str) Int!Str {
       }
     }
   }
-
+  
   Result::ok(max_number + 1)
 }
 
@@ -228,18 +228,18 @@ fn create(dir: Str, raw_name: Str) Void!Str {
     is_valid_slug(raw_name),
     "Migration name must be a slug without spaces, slashes, or dots",
   )
-
+  
   let number = try next_number(dir)
   let migration_name = build_migration_name(number, raw_name)
   let up_path = "{dir}/{migration_name}.up.sql"
   let down_path = "{dir}/{migration_name}.down.sql"
-
+  
   try testing::assert(not exists(up_path), "Migration already exists: {migration_name}")
   try testing::assert(not exists(down_path), "Migration already exists: {migration_name}")
-
+  
   try write_file(up_path, "-- Write SQL to apply migration: {migration_name}\n")
   try write_file(down_path, "-- Write SQL to rollback migration: {migration_name}\n")
-
+  
   fmt::Println("Created migration files:")
   fmt::Println("- {up_path}")
   fmt::Println("- {down_path}")
