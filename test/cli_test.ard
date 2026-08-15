@@ -96,14 +96,8 @@ test fn next_arg_works_at_middle_index() Void!Str {
 
 // -- usage tests --
 
-test fn usage_contains_program_name() Void!Str {
-  let text = cli::usage("myapp")
-  try testing::assert(text.contains("myapp"), "Expected usage to contain program name")
-  testing::pass()
-}
-
 test fn usage_lists_all_commands() Void!Str {
-  let text = cli::usage("x")
+  let text = cli::usage()
   try testing::assert(text.contains("init"), "Missing init")
   try testing::assert(text.contains("create"), "Missing create")
   try testing::assert(text.contains("up"), "Missing up")
@@ -115,7 +109,7 @@ test fn usage_lists_all_commands() Void!Str {
 }
 
 test fn usage_lists_options() Void!Str {
-  let text = cli::usage("x")
+  let text = cli::usage()
   try testing::assert(text.contains("--dir"), "Missing --dir option")
   try testing::assert(text.contains("--database-url"), "Missing --database-url option")
   testing::pass()

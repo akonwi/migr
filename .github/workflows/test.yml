@@ -1,7 +1,7 @@
 name: Tests
 
 env:
-  ARD_VERSION: v0.36.0
+  ARD_VERSION: v0.37.0
 
 on:
   pull_request:
