@@ -2,7 +2,6 @@ name: Tests
 
 env:
   ARD_VERSION: v0.38.0
-  ARD_REF: c1d2d30c6eccf7b9f26aada0d384af728f050d13
 
 on:
   pull_request:
@@ -33,16 +32,16 @@ jobs:
         uses: actions/cache@v6
         with:
           path: /usr/local/bin/ard
-          key: ard-compiler-${{ runner.os }}-${{ env.ARD_VERSION }}-${{ env.ARD_REF }}
+          key: ard-compiler-${{ runner.os }}-${{ env.ARD_VERSION }}
 
       - name: Build Ard compiler
         if: steps.cache-ard.outputs.cache-hit != 'true'
         run: |
-          git init /tmp/ard
-          git -C /tmp/ard remote add origin https://github.com/akonwi/ard.git
-          git -C /tmp/ard fetch --depth 1 origin "$ARD_REF"
-          git -C /tmp/ard checkout --detach FETCH_HEAD
-          test "$(git -C /tmp/ard rev-parse HEAD)" = "$ARD_REF"
+          git clone \
+            --depth 1 \
+            --branch "$ARD_VERSION" \
+            https://github.com/akonwi/ard.git \
+            /tmp/ard
           cd /tmp/ard/compiler
           CGO_ENABLED=1 go build \
             --tags=goexperiment.jsonv2 \
