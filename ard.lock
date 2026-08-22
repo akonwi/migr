@@ -3,12 +3,12 @@
   "root": "root",
   "packages": [
     {
-      "id": "git:795eb0d192b4efcf:4e0c13798c4ff0459ccb632b6edd9b8b07e5e6cb",
+      "id": "git:795eb0d192b4efcf:578f52d8f63d91532f31491a9125087519a8e128",
       "name": "sql",
       "git": "https://github.com/akonwi/ard-sql.git",
-      "commit": "4e0c13798c4ff0459ccb632b6edd9b8b07e5e6cb",
-      "requested": "4e0c13798c4ff0459ccb632b6edd9b8b07e5e6cb",
-      "integrity": "sha256:296be2c930b15d14dc066e892b704985562e970d445843b2e28d54ef728f250f",
+      "commit": "578f52d8f63d91532f31491a9125087519a8e128",
+      "requested": "578f52d8f63d91532f31491a9125087519a8e128",
+      "integrity": "sha256:1b6052aa6d14d1a614ea7f2a6cd11251363f0dabc4e19c2bb5f7046bc5712caf",
       "dependencies": {
         "decode": "git:c5125d0dd6cd13cc:c590f42ec43c5d362844925a8a978d64a1846c5c"
       }
@@ -27,7 +27,7 @@
       "path": ".",
       "dependencies": {
         "decode": "git:c5125d0dd6cd13cc:c590f42ec43c5d362844925a8a978d64a1846c5c",
-        "sql": "git:795eb0d192b4efcf:4e0c13798c4ff0459ccb632b6edd9b8b07e5e6cb"
+        "sql": "git:795eb0d192b4efcf:578f52d8f63d91532f31491a9125087519a8e128"
       }
     }
   ]

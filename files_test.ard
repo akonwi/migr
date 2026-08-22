@@ -4,6 +4,10 @@ use migr/files
 use migr/types
 use go:os
 
+private fn error_message(error: Error) Str {
+  error.error()
+}
+
 // Discovery tests operate on real files inside per-test temp directories.
 // Each test creates its dir with os::MkdirTemp, writes migration file
 // pairs, calls files::load, and asserts on the returned migrations.
@@ -11,7 +15,7 @@ use go:os
 // ─── temp-dir helpers ────────────────────────────────────────────────────
 
 fn make_temp_dir() Str!Str {
-  os::MkdirTemp("", "migr-test-*")
+  os::MkdirTemp("", "migr-test-*").map_err(error_message)
 }
 
 fn cleanup(dir: Str) {
@@ -22,12 +26,12 @@ fn cleanup(dir: Str) {
 }
 
 fn write_pair(dir: Str, name: Str, up: Str, down: Str) Void!Str {
-  try os::WriteFile("{dir}/{name}.up.sql", mut up.bytes(), 420)
-  os::WriteFile("{dir}/{name}.down.sql", mut down.bytes(), 420)
+  try os::WriteFile("{dir}/{name}.up.sql", mut up.bytes(), 420).map_err(error_message)
+  os::WriteFile("{dir}/{name}.down.sql", mut down.bytes(), 420).map_err(error_message)
 }
 
 fn write_file(path: Str, content: Str) Void!Str {
-  os::WriteFile(path, mut content.bytes(), 420)
+  os::WriteFile(path, mut content.bytes(), 420).map_err(error_message)
 }
 
 // ─── happy-path discovery ────────────────────────────────────────────────
