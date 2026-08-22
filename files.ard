@@ -6,6 +6,10 @@ use go:os
 use go:strconv
 use go:strings
 
+private fn error_message(error: Error) Str {
+  error.error()
+}
+
 fn is_dir(path: Str) Bool {
   let info = try os::Stat(path) -> _ { false }
   info.IsDir()
@@ -17,16 +21,16 @@ fn exists(path: Str) Bool {
 }
 
 fn read_file(path: Str) Str!Str {
-  let bytes = try os::ReadFile(path)
+  let bytes = try os::ReadFile(path).map_err(error_message)
   Result::ok(Str::from(bytes))
 }
 
 fn write_file(path: Str, content: Str) Void!Str {
-  os::WriteFile(path, mut content.bytes(), 420)
+  os::WriteFile(path, mut content.bytes(), 420).map_err(error_message)
 }
 
 fn make_dir(path: Str) Void!Str {
-  os::MkdirAll(path, 493)
+  os::MkdirAll(path, 493).map_err(error_message)
 }
 
 fn ensure_dir_exists(path: Str) Void!Str {
@@ -145,7 +149,7 @@ fn build_migration_name(number: Int, raw_name: Str) Str {
 
 fn load(dir: Str) [types::Migration]!Str {
   try ensure_dir_exists(dir)
-  let entries = try os::ReadDir(dir)
+  let entries = try os::ReadDir(dir).map_err(error_message)
   
   let parts: mut [types::MigrationPart] = mut []
   for entry in entries {
@@ -203,7 +207,7 @@ fn load(dir: Str) [types::Migration]!Str {
 
 fn next_number(dir: Str) Int!Str {
   try ensure_dir_exists(dir)
-  let entries = try os::ReadDir(dir)
+  let entries = try os::ReadDir(dir).map_err(error_message)
   
   mut max_number = 0
   for entry in entries {
