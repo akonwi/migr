@@ -1,9 +1,15 @@
 use go:fmt
 use migr/cli
 use migr/runner
+use go:os
+
+fn fail(err: Str) {
+  fmt::Fprintln(os::Stderr, "Error: {err}")
+  os::Exit(1)
+}
 
 fn main() {
-  let config = try cli::parse() -> err { fmt::Println("Error: {err}") }
+  let config = try cli::parse() -> err { fail("{err}") }
   
-  try runner::run(config) -> err { fmt::Println("Error: {err}") }
+  try runner::run(config) -> err { fail("{err}") }
 }
