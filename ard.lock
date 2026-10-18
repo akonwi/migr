@@ -3,31 +3,31 @@
   "root": "root",
   "packages": [
     {
-      "id": "git:795eb0d192b4efcf:578f52d8f63d91532f31491a9125087519a8e128",
+      "id": "git:795eb0d192b4efcf:2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8",
       "name": "sql",
       "git": "https://github.com/akonwi/ard-sql.git",
-      "commit": "578f52d8f63d91532f31491a9125087519a8e128",
-      "requested": "578f52d8f63d91532f31491a9125087519a8e128",
-      "integrity": "sha256:1b6052aa6d14d1a614ea7f2a6cd11251363f0dabc4e19c2bb5f7046bc5712caf",
+      "commit": "2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8",
+      "requested": "2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8",
+      "integrity": "sha256:1ec2813f471c7290a2653c13512b7282843ca2167ec3565575e01920b5949e15",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:c590f42ec43c5d362844925a8a978d64a1846c5c"
+        "decode": "git:c5125d0dd6cd13cc:87c17cf2858ebf034f1c62a039a1c927cabf3bb0"
       }
     },
     {
-      "id": "git:c5125d0dd6cd13cc:c590f42ec43c5d362844925a8a978d64a1846c5c",
+      "id": "git:c5125d0dd6cd13cc:87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
       "name": "decode",
       "git": "https://github.com/akonwi/ard-decode.git",
-      "commit": "c590f42ec43c5d362844925a8a978d64a1846c5c",
-      "requested": "c590f42ec43c5d362844925a8a978d64a1846c5c",
-      "integrity": "sha256:34ecc89cd4acaf0dc056d26f00ec7e570b294708e267f3b4042ab0f2d09fbbc1"
+      "commit": "87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
+      "requested": "87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
+      "integrity": "sha256:5b144d3a5c0bb1d0613ad18093e56e6da835dc42d5afe26e07fb46f7f381fdf1"
     },
     {
       "id": "root",
       "name": "migr",
       "path": ".",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:c590f42ec43c5d362844925a8a978d64a1846c5c",
-        "sql": "git:795eb0d192b4efcf:578f52d8f63d91532f31491a9125087519a8e128"
+        "decode": "git:c5125d0dd6cd13cc:87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
+        "sql": "git:795eb0d192b4efcf:2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8"
       }
     }
   ]

@@ -10,6 +10,6 @@ fn fail(err: Str) {
 
 fn main() {
   let config = try cli::parse() -> err { fail("{err}") }
-  
+
   try runner::run(config) -> err { fail("{err}") }
 }
