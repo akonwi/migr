@@ -1,6 +1,6 @@
-ard = ">= 0.38.0"
+ard = ">= 0.44.0"
 name = "migr"
 
 [dependencies]
-decode = { git = "https://github.com/akonwi/ard-decode.git", commit = "c590f42ec43c5d362844925a8a978d64a1846c5c" }
-sql = { git = "https://github.com/akonwi/ard-sql.git", commit = "578f52d8f63d91532f31491a9125087519a8e128" }
+decode = { git = "https://github.com/akonwi/ard-decode.git", commit = "87c17cf2858ebf034f1c62a039a1c927cabf3bb0" }
+sql = { git = "https://github.com/akonwi/ard-sql.git", commit = "2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8" }
