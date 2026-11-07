@@ -3,31 +3,31 @@
   "root": "root",
   "packages": [
     {
-      "id": "git:795eb0d192b4efcf:2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8",
+      "id": "git:795eb0d192b4efcf:1ec8e5babec7f0ad83ca52fadc62d82627562ab5",
       "name": "sql",
       "git": "https://github.com/akonwi/ard-sql.git",
-      "commit": "2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8",
-      "requested": "2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8",
-      "integrity": "sha256:1ec2813f471c7290a2653c13512b7282843ca2167ec3565575e01920b5949e15",
+      "commit": "1ec8e5babec7f0ad83ca52fadc62d82627562ab5",
+      "requested": "1ec8e5babec7f0ad83ca52fadc62d82627562ab5",
+      "integrity": "sha256:35efa82fad1b0fe6470087f251f23d32269e6d99038a9d6ec1eefeed06091465",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:87c17cf2858ebf034f1c62a039a1c927cabf3bb0"
+        "decode": "git:c5125d0dd6cd13cc:82741ef8a23c0676fef4453b8c35f421a42accff"
       }
     },
     {
-      "id": "git:c5125d0dd6cd13cc:87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
+      "id": "git:c5125d0dd6cd13cc:82741ef8a23c0676fef4453b8c35f421a42accff",
       "name": "decode",
       "git": "https://github.com/akonwi/ard-decode.git",
-      "commit": "87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
-      "requested": "87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
-      "integrity": "sha256:5b144d3a5c0bb1d0613ad18093e56e6da835dc42d5afe26e07fb46f7f381fdf1"
+      "commit": "82741ef8a23c0676fef4453b8c35f421a42accff",
+      "requested": "82741ef8a23c0676fef4453b8c35f421a42accff",
+      "integrity": "sha256:b7856bdfafbc2501dba1d856c8b1baef97d89f9f8f5b0cf1dc358d3514ba7ca3"
     },
     {
       "id": "root",
       "name": "migr",
       "path": ".",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:87c17cf2858ebf034f1c62a039a1c927cabf3bb0",
-        "sql": "git:795eb0d192b4efcf:2e4af95e4a423afedf0c7fc0c950f01adfeb8aa8"
+        "decode": "git:c5125d0dd6cd13cc:82741ef8a23c0676fef4453b8c35f421a42accff",
+        "sql": "git:795eb0d192b4efcf:1ec8e5babec7f0ad83ca52fadc62d82627562ab5"
       }
     }
   ]

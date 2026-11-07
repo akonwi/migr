@@ -26,7 +26,7 @@ fn read_file(path: Str) Str!Str {
 }
 
 fn write_file(path: Str, content: Str) Void!Str {
-  os::WriteFile(path, mut content.bytes(), 420).map_err(error_message)
+  os::WriteFile(path, &mut content.bytes(), 420).map_err(error_message)
 }
 
 fn make_dir(path: Str) Void!Str {
@@ -119,7 +119,7 @@ fn has_migration_number(migrations: [types::Migration], number: Int, except_name
   found
 }
 
-fn sort_migrations(migrations: mut [types::Migration]) [types::Migration] {
+fn sort_migrations(migrations: &mut [types::Migration]) [types::Migration] {
   mut left = 0
   while left < migrations.size() {
     mut right = left + 1
@@ -134,7 +134,7 @@ fn sort_migrations(migrations: mut [types::Migration]) [types::Migration] {
     left = left + 1
   }
 
-  migrations.@
+  migrations.*
 }
 
 fn build_migration_name(number: Int, raw_name: Str) Str {
@@ -151,7 +151,7 @@ fn load(dir: Str) [types::Migration]!Str {
   try ensure_dir_exists(dir)
   let entries = try os::ReadDir(dir).map_err(error_message)
 
-  let parts: mut [types::MigrationPart] = mut []
+  let parts: &mut [types::MigrationPart] = &mut []
   for entry in entries {
     if (not entry.IsDir()) and is_migration_sql(entry.Name()) {
       let parsed = try parse_part(entry.Name())
@@ -159,21 +159,21 @@ fn load(dir: Str) [types::Migration]!Str {
     }
   }
 
-  let migrations: mut [types::Migration] = mut []
+  let migrations: &mut [types::Migration] = &mut []
 
   for part in parts {
     match part.direction {
       types::Direction::up => {
         try testing::assert(
-          not has_migration_name(migrations.@, part.name),
+          not has_migration_name(migrations.*, part.name),
           "Duplicate up migration: {part.filename}",
         )
         try testing::assert(
-          not has_migration_number(migrations.@, part.number, part.name),
+          not has_migration_number(migrations.*, part.number, part.name),
           "Duplicate migration number: {part.number}",
         )
         try testing::assert(
-          has_part(parts.@, part.name, types::Direction::down),
+          has_part(parts.*, part.name, types::Direction::down),
           "Missing down migration for {part.name}",
         )
 
@@ -194,7 +194,7 @@ fn load(dir: Str) [types::Migration]!Str {
     match part.direction {
       types::Direction::down => {
         try testing::assert(
-          has_part(parts.@, part.name, types::Direction::up),
+          has_part(parts.*, part.name, types::Direction::up),
           "Missing up migration for {part.name}",
         )
       },

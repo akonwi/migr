@@ -64,13 +64,13 @@ fn remove(tx: sql::Transaction, name: Str) Void!Str {
 fn applied(db: sql::Database) [Str]!Str {
   let rows = try db.query("SELECT name FROM schema_migrations ORDER BY name ASC").all([:])
 
-  let names: mut [Str] = mut []
+  let names: &mut [Str] = &mut []
   for row in rows {
     let name = try decode::run(row, decode::field("name", decode::string)) -> err { Result::err(err.to_str()) }
     names.push(name)
   }
 
-  Result::ok(names.@)
+  Result::ok(names.*)
 }
 
 fn last_batch_migrations(db: sql::Database) [Str]!Str {
@@ -78,11 +78,11 @@ fn last_batch_migrations(db: sql::Database) [Str]!Str {
     "SELECT name FROM schema_migrations WHERE batch = (SELECT COALESCE(MAX(batch), 0) FROM schema_migrations) ORDER BY name DESC",
   ).all([:])
 
-  let names: mut [Str] = mut []
+  let names: &mut [Str] = &mut []
   for row in rows {
     let name = try decode::run(row, decode::field("name", decode::string)) -> err { Result::err(err.to_str()) }
     names.push(name)
   }
 
-  Result::ok(names.@)
+  Result::ok(names.*)
 }

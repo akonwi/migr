@@ -26,12 +26,12 @@ fn cleanup(dir: Str) {
 }
 
 fn write_pair(dir: Str, name: Str, up: Str, down: Str) Void!Str {
-  try os::WriteFile("{dir}/{name}.up.sql", mut up.bytes(), 420).map_err(error_message)
-  os::WriteFile("{dir}/{name}.down.sql", mut down.bytes(), 420).map_err(error_message)
+  try os::WriteFile("{dir}/{name}.up.sql", &mut up.bytes(), 420).map_err(error_message)
+  os::WriteFile("{dir}/{name}.down.sql", &mut down.bytes(), 420).map_err(error_message)
 }
 
 fn write_file(path: Str, content: Str) Void!Str {
-  os::WriteFile(path, mut content.bytes(), 420).map_err(error_message)
+  os::WriteFile(path, &mut content.bytes(), 420).map_err(error_message)
 }
 
 // ─── happy-path discovery ────────────────────────────────────────────────
