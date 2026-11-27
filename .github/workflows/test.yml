@@ -1,7 +1,7 @@
 name: Tests
 
 env:
-  ARD_VERSION: v0.48.0
+  ARD_VERSION: v0.49.1
 
 on:
   pull_request:
@@ -45,7 +45,7 @@ jobs:
           cd /tmp/ard/compiler
           CGO_ENABLED=1 go build \
             --tags=goexperiment.jsonv2 \
-            -ldflags="-X github.com/akonwi/ard/version.Version=$ARD_VERSION" \
+            -ldflags="-X github.com/akonwi/ard/compiler/version.Version=$ARD_VERSION" \
             -o /tmp/ard-bin \
             .
           sudo install /tmp/ard-bin /usr/local/bin/ard

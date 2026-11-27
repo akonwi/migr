@@ -3,31 +3,31 @@
   "root": "root",
   "packages": [
     {
-      "id": "git:795eb0d192b4efcf:f5bc03a9fe90714b44eb4e5cc4999f9361c01351",
+      "id": "git:795eb0d192b4efcf:9b3f462a77178fc198f632d61d7f033cafbc5e6b",
       "name": "sql",
       "git": "https://github.com/akonwi/ard-sql.git",
-      "commit": "f5bc03a9fe90714b44eb4e5cc4999f9361c01351",
-      "requested": "f5bc03a9fe90714b44eb4e5cc4999f9361c01351",
-      "integrity": "sha256:46dc8a8874c08cc9adca2017c4d5015a18ca6b37374abbb8b7034247480fb214",
+      "commit": "9b3f462a77178fc198f632d61d7f033cafbc5e6b",
+      "requested": "9b3f462a77178fc198f632d61d7f033cafbc5e6b",
+      "integrity": "sha256:5a7d1a87595b710fc4ca54b70d7065e23a18b7559e8913205a52ce4e18e367c7",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:891e71c0d5b48e4220795865fb6729541ad8cee3"
+        "decode": "git:c5125d0dd6cd13cc:f27abda6a089ce4cca3408e53fba777e3b417362"
       }
     },
     {
-      "id": "git:c5125d0dd6cd13cc:891e71c0d5b48e4220795865fb6729541ad8cee3",
+      "id": "git:c5125d0dd6cd13cc:f27abda6a089ce4cca3408e53fba777e3b417362",
       "name": "decode",
       "git": "https://github.com/akonwi/ard-decode.git",
-      "commit": "891e71c0d5b48e4220795865fb6729541ad8cee3",
-      "requested": "891e71c0d5b48e4220795865fb6729541ad8cee3",
-      "integrity": "sha256:1b89320794a64de070449a79c2e06294f40d4a6643e2a94e2aad15d3f2cbeeea"
+      "commit": "f27abda6a089ce4cca3408e53fba777e3b417362",
+      "requested": "f27abda6a089ce4cca3408e53fba777e3b417362",
+      "integrity": "sha256:3f05a3e8bc4cb5271b073b272d5f5f3e3e23ce7b58f0ecd831d6b4be42c2d737"
     },
     {
       "id": "root",
       "name": "migr",
       "path": ".",
       "dependencies": {
-        "decode": "git:c5125d0dd6cd13cc:891e71c0d5b48e4220795865fb6729541ad8cee3",
-        "sql": "git:795eb0d192b4efcf:f5bc03a9fe90714b44eb4e5cc4999f9361c01351"
+        "decode": "git:c5125d0dd6cd13cc:f27abda6a089ce4cca3408e53fba777e3b417362",
+        "sql": "git:795eb0d192b4efcf:9b3f462a77178fc198f632d61d7f033cafbc5e6b"
       }
     }
   ]
